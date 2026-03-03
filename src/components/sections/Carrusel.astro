@@ -1,4 +1,6 @@
 ---
+import { buildOptimizedImageUrl } from "../../lib/imageUtils";
+
 const images = [
   {
     src: "https://wkayvtztiijqpvoxtcxj.supabase.co/storage/v1/object/public/media/site/1769636649979-xolmis-pyrope.webp",
@@ -22,7 +24,10 @@ const images = [
   },
 ];
 
-const heroImages = images;
+const heroImages = images.map((image) => ({
+  ...image,
+  src: buildOptimizedImageUrl(image.src, { width: 1920, quality: 62 }),
+}));
 ---
 
 <section class="hero">

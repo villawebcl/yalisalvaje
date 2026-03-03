@@ -17,6 +17,8 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 const STORAGE_BUCKET = "media";
 const BLOG_FOLDER = "blog";
 const GALLERY_FOLDER = "galeria";
+const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
+const ENABLE_IMAGE_TRANSFORM = window.__ENABLE_IMAGE_TRANSFORM__ === true;
 
 const banner = document.querySelector(".auth-status");
 const bannerText = banner?.querySelector(".status-text");
@@ -37,6 +39,7 @@ const blogPreviewExcerpt = document.getElementById("blog-preview-excerpt");
 const blogPreviewCategory = document.getElementById("blog-preview-category");
 const blogContentInput = blogForm?.querySelector("[name='contenido']");
 const blogContentPreview = document.getElementById("blog-content-preview");
+const blogMarkdownButtons = document.querySelectorAll(".md-btn[data-md-action]");
 
 const galleryForm = document.getElementById("gallery-form");
 const galleryIdInput = galleryForm?.querySelector("[name='image_id']");
@@ -131,6 +134,25 @@ const extractPathFromPublicUrl = (url) => {
   return url.slice(index + marker.length);
 };
 
+const buildOptimizedPublicUrl = (url, width = 960, quality = 64) => {
+  if (!url) return "";
+  if (!ENABLE_IMAGE_TRANSFORM) return url;
+  try {
+    const parsed = new URL(url);
+    const marker = `/storage/v1/object/public/${STORAGE_BUCKET}/`;
+    const markerIndex = parsed.pathname.indexOf(marker);
+    if (markerIndex === -1) return url;
+    const path = parsed.pathname.slice(markerIndex + marker.length);
+    const renderUrl = new URL(`/storage/v1/render/image/public/${STORAGE_BUCKET}/${path}`, parsed.origin);
+    renderUrl.searchParams.set("width", String(Math.max(240, Math.round(width))));
+    renderUrl.searchParams.set("quality", String(Math.max(30, Math.min(90, Math.round(quality)))));
+    renderUrl.searchParams.set("format", "webp");
+    return renderUrl.toString();
+  } catch {
+    return url;
+  }
+};
+
 const removeImageByUrl = async (url) => {
   if (!url) return;
   const path = extractPathFromPublicUrl(url);
@@ -142,7 +164,7 @@ const removeImageByUrl = async (url) => {
 const uploadImage = async (file, folder) => {
   const path = buildFilePath(folder, file);
   const { error } = await supabase.storage.from(STORAGE_BUCKET).upload(path, file, {
-    cacheControl: "3600",
+    cacheControl: "31536000",
     upsert: false,
     contentType: file.type || "image/webp",
   });
@@ -153,7 +175,7 @@ const uploadImage = async (file, folder) => {
 };
 
 const compressImage = async (file, options = {}) => {
-  const { maxWidth = 1600, quality = 0.8 } = options;
+  const { maxWidth = 1280, quality = 0.68 } = options;
   try {
     const bitmap = await createImageBitmap(file);
     const scale = Math.min(1, maxWidth / bitmap.width);
@@ -167,10 +189,15 @@ const compressImage = async (file, options = {}) => {
     if (!ctx) return file;
     ctx.drawImage(bitmap, 0, 0, width, height);
 
-    const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/webp", quality));
+    const avifBlob = await new Promise((resolve) => canvas.toBlob(resolve, "image/avif", quality));
+    const webpBlob = avifBlob
+      ? null
+      : await new Promise((resolve) => canvas.toBlob(resolve, "image/webp", quality));
+    const blob = avifBlob || webpBlob;
     if (!blob) return file;
     const baseName = file.name.replace(/\.[^.]+$/, "");
-    return new File([blob], `${baseName}.webp`, { type: "image/webp" });
+    const extension = blob.type === "image/avif" ? "avif" : "webp";
+    return new File([blob], `${baseName}.${extension}`, { type: blob.type });
   } catch (error) {
     return file;
   }
@@ -189,7 +216,7 @@ const resetBlogForm = () => {
   if (blogContentInput instanceof HTMLTextAreaElement) {
     blogContentInput.style.height = "";
   }
-  if (blogContentPreview) blogContentPreview.textContent = "";
+  updateBlogContentPreview("");
 };
 
 const openModal = (modalEl) => {
@@ -286,7 +313,15 @@ blogForm?.querySelector("[name='extracto']")?.addEventListener("input", (event) 
 blogContentInput?.addEventListener("input", (event) => {
   resizeTextarea(event.target);
   const value = event.target?.value ?? "";
-  if (blogContentPreview) blogContentPreview.textContent = value;
+  updateBlogContentPreview(value);
+});
+
+blogMarkdownButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    const action = button.getAttribute("data-md-action");
+    if (!action) return;
+    handleMarkdownAction(action);
+  });
 });
 
 blogForm?.querySelector("[name='categoria']")?.addEventListener("input", (event) => {
@@ -316,6 +351,181 @@ const formatDate = (value) => {
     month: "long",
     year: "numeric",
   });
+};
+
+const escapeHtml = (value) =>
+  String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
+const sanitizeUrl = (value) => {
+  try {
+    const parsed = new URL(String(value || ""), window.location.origin);
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+      return parsed.href;
+    }
+    return "";
+  } catch {
+    return "";
+  }
+};
+
+const sanitizeHref = (value) => {
+  const decoded = String(value || "").replace(/&amp;/g, "&");
+  try {
+    const parsed = new URL(decoded, window.location.origin);
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") return parsed.href;
+    return "#";
+  } catch {
+    return "#";
+  }
+};
+
+const formatInlineMarkdown = (value) => {
+  let formatted = String(value || "");
+
+  formatted = formatted.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, href) => {
+    const safeHref = sanitizeHref(href);
+    return `<a href="${safeHref}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+  });
+  formatted = formatted.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  formatted = formatted.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+  formatted = formatted.replace(/`([^`]+)`/g, "<code>$1</code>");
+
+  return formatted;
+};
+
+const renderMarkdownPreview = (value) => {
+  const safeValue = escapeHtml(String(value || ""));
+  if (!safeValue.trim()) return "";
+
+  const lines = safeValue.split("\n");
+  const blocks = [];
+  let paragraph = [];
+  let listType = "";
+  let listItems = [];
+
+  const flushParagraph = () => {
+    if (!paragraph.length) return;
+    blocks.push(`<p>${formatInlineMarkdown(paragraph.join(" "))}</p>`);
+    paragraph = [];
+  };
+
+  const flushList = () => {
+    if (!listItems.length || !listType) return;
+    const items = listItems.map((item) => `<li>${formatInlineMarkdown(item)}</li>`).join("");
+    blocks.push(`<${listType}>${items}</${listType}>`);
+    listItems = [];
+    listType = "";
+  };
+
+  lines.forEach((rawLine) => {
+    const line = rawLine.trim();
+    if (!line) {
+      flushParagraph();
+      flushList();
+      return;
+    }
+
+    const headingMatch = line.match(/^(#{1,3})\s+(.*)$/);
+    if (headingMatch) {
+      flushParagraph();
+      flushList();
+      const level = headingMatch[1].length;
+      blocks.push(`<h${level + 2}>${formatInlineMarkdown(headingMatch[2])}</h${level + 2}>`);
+      return;
+    }
+
+    if (/^(-{3,}|\*{3,})$/.test(line)) {
+      flushParagraph();
+      flushList();
+      blocks.push("<hr />");
+      return;
+    }
+
+    const quoteMatch = line.match(/^>\s?(.*)$/);
+    if (quoteMatch) {
+      flushParagraph();
+      flushList();
+      blocks.push(`<blockquote>${formatInlineMarkdown(quoteMatch[1])}</blockquote>`);
+      return;
+    }
+
+    const ulMatch = line.match(/^[-*]\s+(.*)$/);
+    if (ulMatch) {
+      flushParagraph();
+      if (listType && listType !== "ul") flushList();
+      listType = "ul";
+      listItems.push(ulMatch[1]);
+      return;
+    }
+
+    const olMatch = line.match(/^\d+\.\s+(.*)$/);
+    if (olMatch) {
+      flushParagraph();
+      if (listType && listType !== "ol") flushList();
+      listType = "ol";
+      listItems.push(olMatch[1]);
+      return;
+    }
+
+    flushList();
+    paragraph.push(line);
+  });
+
+  flushParagraph();
+  flushList();
+  return blocks.join("");
+};
+
+const updateBlogContentPreview = (value) => {
+  if (!blogContentPreview) return;
+  const html = renderMarkdownPreview(value);
+  blogContentPreview.innerHTML = html || "<p>La vista previa aparecerá aquí.</p>";
+};
+
+const wrapSelection = (textarea, prefix, suffix = "") => {
+  const start = textarea.selectionStart ?? 0;
+  const end = textarea.selectionEnd ?? 0;
+  const selected = textarea.value.slice(start, end);
+  const next = `${prefix}${selected || "texto"}${suffix}`;
+  textarea.setRangeText(next, start, end, "end");
+  textarea.focus();
+  updateBlogContentPreview(textarea.value);
+  resizeTextarea(textarea);
+};
+
+const prependByLine = (textarea, token) => {
+  const start = textarea.selectionStart ?? 0;
+  const end = textarea.selectionEnd ?? 0;
+  const selected = textarea.value.slice(start, end) || "texto";
+  const lines = selected.split("\n").map((line) => `${token}${line}`);
+  textarea.setRangeText(lines.join("\n"), start, end, "end");
+  textarea.focus();
+  updateBlogContentPreview(textarea.value);
+  resizeTextarea(textarea);
+};
+
+const handleMarkdownAction = (action) => {
+  if (!(blogContentInput instanceof HTMLTextAreaElement)) return;
+  if (action === "h2") return prependByLine(blogContentInput, "## ");
+  if (action === "h3") return prependByLine(blogContentInput, "### ");
+  if (action === "bold") return wrapSelection(blogContentInput, "**", "**");
+  if (action === "italic") return wrapSelection(blogContentInput, "*", "*");
+  if (action === "ul") return prependByLine(blogContentInput, "- ");
+  if (action === "ol") return prependByLine(blogContentInput, "1. ");
+  if (action === "quote") return prependByLine(blogContentInput, "> ");
+  if (action === "link") return wrapSelection(blogContentInput, "[texto](", ")");
+  if (action === "hr") {
+    const value = blogContentInput.value;
+    blogContentInput.value = `${value}${value.trim() ? "\n\n" : ""}---\n`;
+    blogContentInput.focus();
+    updateBlogContentPreview(blogContentInput.value);
+    resizeTextarea(blogContentInput);
+  }
 };
 
 const loadFeaturedLimit = async () => {
@@ -381,23 +591,28 @@ const loadBlogPosts = async () => {
   posts.forEach((post) => {
     const card = document.createElement("article");
     card.className = "list-card card-surface card-border card-hover media-zoom";
+    const safeImageUrl = sanitizeUrl(post.image_url);
+    const safeTitle = escapeHtml(post.title ?? "Entrada");
+    const safeCategory = escapeHtml(post.category ?? "Sin categoría");
+    const safeExcerpt = escapeHtml(post.excerpt ?? "");
+    const safeId = escapeHtml(String(post.id ?? ""));
 
     card.innerHTML = `
       <div class="thumb">
-        ${post.image_url
-        ? `<img src="${post.image_url}" alt="${post.title ?? "Entrada"}" loading="lazy" decoding="async" />`
+        ${safeImageUrl
+        ? `<img src="${buildOptimizedPublicUrl(safeImageUrl, 760, 60)}" alt="${safeTitle}" loading="lazy" decoding="async" />`
         : "<div class='thumb-empty'>Sin imagen</div>"
       }
       </div>
       <div class="list-body">
-        <p class="tag">${post.category ?? "Sin categoría"}</p>
-        <h3>${post.title}</h3>
-        <p class="excerpt">${post.excerpt ?? ""}</p>
+        <p class="tag">${safeCategory}</p>
+        <h3>${safeTitle}</h3>
+        <p class="excerpt">${safeExcerpt}</p>
         <p class="meta">${formatDate(post.published_at)}</p>
       </div>
       <div class="list-actions">
-        <button type="button" data-action="edit" data-id="${post.id}">Editar</button>
-        <button type="button" class="danger" data-action="delete" data-id="${post.id}">Eliminar</button>
+        <button type="button" data-action="edit" data-id="${safeId}">Editar</button>
+        <button type="button" class="danger" data-action="delete" data-id="${safeId}">Eliminar</button>
       </div>
     `;
 
@@ -416,11 +631,12 @@ const loadBlogPosts = async () => {
       const fullContent = post.content ?? post.contenido ?? "";
       if (contentInput) contentInput.value = fullContent;
       resizeTextarea(contentInput);
-      if (blogContentPreview) blogContentPreview.textContent = fullContent;
+      updateBlogContentPreview(fullContent);
 
       blogForm?.setAttribute("data-image", post.image_url ?? "");
       if (blogPreviewImage) {
-        if (post.image_url) blogPreviewImage.setAttribute("src", post.image_url);
+        if (safeImageUrl)
+          blogPreviewImage.setAttribute("src", buildOptimizedPublicUrl(safeImageUrl, 920, 66));
         else blogPreviewImage.removeAttribute("src");
       }
       if (blogPreviewTitle) blogPreviewTitle.textContent = post.title ?? "Título de la entrada";
@@ -513,20 +729,28 @@ const loadGalleryItems = async () => {
     if (onlyFeatured) card.setAttribute("draggable", "true");
 
     const brief = item.detalle || item.alt_text || "";
+    const safeImageUrl = sanitizeUrl(item.url_publica);
+    const safeAlt = escapeHtml(item.alt_text ?? "Imagen");
+    const safeDescription = escapeHtml(item.descripcion ?? "Sin descripción");
+    const safeBrief = escapeHtml(brief);
+    const safeItemId = escapeHtml(String(item.id ?? ""));
     card.innerHTML = `
       <div class="thumb">
-        <img src="${item.url_publica}" alt="${item.alt_text ?? "Imagen"}" loading="lazy" decoding="async" />
+        ${safeImageUrl
+        ? `<img src="${buildOptimizedPublicUrl(safeImageUrl, 680, 60)}" alt="${safeAlt}" loading="lazy" decoding="async" />`
+        : "<div class='thumb-empty'>Imagen no válida</div>"
+      }
       </div>
       <div class="list-body">
         ${item.destacada ? "<p class='tag'>Destacada</p>" : ""}
-        <h3>${item.descripcion ?? "Sin descripción"}</h3>
-        <p class="excerpt">${brief}</p>
+        <h3>${safeDescription}</h3>
+        <p class="excerpt">${safeBrief}</p>
         <p class="meta">${formatDate(item.created_at)}</p>
       </div>
       <div class="list-actions">
         ${onlyFeatured ? "<button type='button' class='drag-handle' aria-label='Reordenar'>↕</button>" : ""}
-        <button type="button" data-action="edit" data-id="${item.id}">Editar</button>
-        <button type="button" class="danger" data-action="delete" data-id="${item.id}">Eliminar</button>
+        <button type="button" data-action="edit" data-id="${safeItemId}">Editar</button>
+        <button type="button" class="danger" data-action="delete" data-id="${safeItemId}">Eliminar</button>
       </div>
     `;
 
@@ -546,7 +770,8 @@ const loadGalleryItems = async () => {
       galleryForm?.setAttribute("data-featured-order", item.destacada_orden ?? "");
       galleryForm?.setAttribute("data-image", item.url_publica ?? "");
       if (galleryPreviewImage) {
-        if (item.url_publica) galleryPreviewImage.setAttribute("src", item.url_publica);
+        if (safeImageUrl)
+          galleryPreviewImage.setAttribute("src", buildOptimizedPublicUrl(safeImageUrl, 860, 64));
         else galleryPreviewImage.removeAttribute("src");
       }
       if (galleryPreviewTitle)
@@ -619,8 +844,16 @@ blogForm?.addEventListener("submit", async (event) => {
 
   let imageUrl = existingImage || null;
   if (file instanceof File && file.size > 0) {
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setMessage(blogMessage, "La imagen excede 8MB. Usa una imagen más liviana.", "error");
+      return;
+    }
+    if (!file.type.startsWith("image/")) {
+      setMessage(blogMessage, "Formato no permitido. Sube solo imágenes.", "error");
+      return;
+    }
     try {
-      const optimized = await compressImage(file, { maxWidth: 1600, quality: 0.8 });
+      const optimized = await compressImage(file, { maxWidth: 1280, quality: 0.68 });
       imageUrl = await uploadImage(optimized, BLOG_FOLDER);
       if (existingImage) await removeImageByUrl(existingImage);
     } catch (error) {
@@ -673,8 +906,16 @@ galleryForm?.addEventListener("submit", async (event) => {
 
   let imageUrl = existingImage || null;
   if (file instanceof File && file.size > 0) {
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setMessage(galleryMessage, "La imagen excede 8MB. Usa una imagen más liviana.", "error");
+      return;
+    }
+    if (!file.type.startsWith("image/")) {
+      setMessage(galleryMessage, "Formato no permitido. Sube solo imágenes.", "error");
+      return;
+    }
     try {
-      const optimized = await compressImage(file, { maxWidth: 1400, quality: 0.8 });
+      const optimized = await compressImage(file, { maxWidth: 1120, quality: 0.65 });
       imageUrl = await uploadImage(optimized, GALLERY_FOLDER);
       if (existingImage) await removeImageByUrl(existingImage);
     } catch (error) {
@@ -799,7 +1040,11 @@ const enableGalleryDrag = () => {
       id: Number(card.dataset.id),
       destacada_orden: index + 1,
     }));
-    await supabase.from("imagenes").upsert(updates, { onConflict: "id" });
+    const { error } = await supabase.from("imagenes").upsert(updates, { onConflict: "id" });
+    if (error) {
+      showToast(`No se pudo actualizar el orden: ${error.message}`, "error");
+      return;
+    }
     showToast("Orden actualizado.", "success");
   };
 
@@ -820,24 +1065,8 @@ const enableGalleryDrag = () => {
   });
 };
 
+updateBlogContentPreview(blogContentInput?.value ?? "");
+
 await loadBlogPosts();
 await loadGalleryItems();
 await loadFeaturedLimit();
-
-const tabs = document.querySelectorAll(".tab");
-const panels = document.querySelectorAll(".tab-panel");
-
-tabs.forEach((tab) => {
-  tab.addEventListener("click", () => {
-    const target = tab.getAttribute("data-tab");
-
-    tabs.forEach((btn) => {
-      const isActive = btn === tab;
-      btn.setAttribute("aria-selected", String(isActive));
-    });
-
-    panels.forEach((panel) => {
-      panel.hidden = panel.getAttribute("data-panel") !== target;
-    });
-  });
-});

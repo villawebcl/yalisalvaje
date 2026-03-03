@@ -14,14 +14,14 @@ import Footer from "../components/ui/Footer.astro";
         <p class="lead">Inicia sesión con tu cuenta de administrador para gestionar el blog y la galería.</p>
       </div>
 
-      <form class="form" id="login-form" autocomplete="off">
+      <form class="form" id="login-form" autocomplete="on">
         <label>
           Email
-          <input type="email" name="email" placeholder="correo@dominio.com" required />
+          <input type="email" name="email" autocomplete="username" placeholder="correo@dominio.com" required />
         </label>
         <label>
           Contraseña
-          <input type="password" name="password" placeholder="••••••••" required />
+          <input type="password" name="password" autocomplete="current-password" placeholder="••••••••" required />
         </label>
         <button type="submit">Ingresar</button>
         <p class="note" id="login-message"></p>

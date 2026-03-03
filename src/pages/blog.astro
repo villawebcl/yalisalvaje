@@ -3,17 +3,25 @@ import Layout from "../layouts/Layout.astro";
 import Header from "../components/ui/Header.astro";
 import Footer from "../components/ui/Footer.astro";
 import { supabase } from "../lib/supabaseClient";
+import { buildOptimizedImageUrl, buildResponsiveSrcSet } from "../lib/imageUtils";
 
 const { data: posts, error } = await supabase
   .from("blog_posts")
-  .select("id, title, excerpt, content, image_url, category, published_at")
+  .select("id, title, excerpt, image_url, category, published_at")
   .order("published_at", { ascending: false });
 
 if (error) {
   console.error("Error al cargar el blog:", error);
 }
 
-const blogPosts = posts ?? [];
+const blogPosts = (posts ?? []).map((post) => ({
+  ...post,
+  image_card_url: buildOptimizedImageUrl(post.image_url, { width: 980, quality: 64 }),
+  image_card_srcset: buildResponsiveSrcSet(post.image_url, {
+    widths: [420, 680, 920, 1200],
+    quality: 62,
+  }),
+}));
 ---
 
 <Layout title="Blog | Yali Salvaje">
@@ -24,8 +32,7 @@ const blogPosts = posts ?? [];
       <h1>Blog del Humedal</h1>
       <p class="lead">
         Aquí podrás encontrar artículos con imágenes y texto sobre flora, fauna
-        y actividades de conservación. El contenido se publica desde el panel de
-        administración.
+        y actividades de conservación.
       </p>
 
       <div class="grid">
@@ -37,22 +44,18 @@ const blogPosts = posts ?? [];
             </div>
           ) : (
             blogPosts.map((post) => (
-              <article
-                class="card card-surface card-hover media-zoom"
-                data-title={post.title}
-                data-category={post.category ?? ""}
-                data-excerpt={post.excerpt ?? ""}
-                data-content={encodeURIComponent(post.content ?? "")}
-                data-image={post.image_url ?? ""}
-                data-date={post.published_at ?? ""}
-              >
-                {post.image_url && (
+              <a class="card card-surface card-hover media-zoom" href={`/blog/${post.id}`}>
+                {post.image_card_url && (
                   <div class="card-image">
                     <img
-                      src={post.image_url}
+                      src={post.image_card_url}
+                      srcset={post.image_card_srcset || undefined}
+                      sizes="(max-width: 900px) 100vw, (max-width: 1300px) 50vw, 33vw"
                       alt={post.title}
                       loading="lazy"
                       decoding="async"
+                      data-fallback={post.image_url ?? ""}
+                      onerror="if(this.dataset.fallback && this.src !== this.dataset.fallback){this.src=this.dataset.fallback;}"
                     />
                   </div>
                 )}
@@ -70,142 +73,15 @@ const blogPosts = posts ?? [];
                     </p>
                   )}
                 </div>
-              </article>
+              </a>
             ))
           )
         }
-      </div>
-      <div class="modal ui-modal" id="blog-modal" aria-hidden="true">
-        <div class="modal-overlay ui-modal-overlay" id="modal-overlay"></div>
-        <div
-          class="modal-content ui-modal-panel"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="modal-title"
-        >
-          <button class="modal-close ui-modal-close" type="button" aria-label="Cerrar"
-            >×</button
-          >
-          <div class="modal-hero">
-            <img id="modal-image" alt="" />
-          </div>
-          <div class="modal-body">
-            <p class="tag" id="modal-category"></p>
-            <h2 id="modal-title"></h2>
-            <p class="date" id="modal-date"></p>
-            <p class="excerpt" id="modal-excerpt"></p>
-            <div class="content" id="modal-content"></div>
-          </div>
-        </div>
       </div>
     </div>
   </section>
   <Footer />
 </Layout>
-
-<script>
-  document.addEventListener("astro:page-load", () => {
-    const modal = document.getElementById("blog-modal");
-    const overlay = document.getElementById("modal-overlay");
-    const modalImage = document.getElementById("modal-image");
-    const modalTitle = document.getElementById("modal-title");
-    const modalCategory = document.getElementById("modal-category");
-    const modalDate = document.getElementById("modal-date");
-    const modalExcerpt = document.getElementById("modal-excerpt");
-    const modalContent = document.getElementById("modal-content");
-    const closeButton = document.querySelector(".modal-close");
-
-    const formatDate = (value) => {
-      if (!value) return "";
-      return new Date(value).toLocaleDateString("es-CL", {
-        day: "2-digit",
-        month: "long",
-        year: "numeric",
-      });
-    };
-
-    const escapeHtml = (value) =>
-      value
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/\"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-
-    const renderContent = (value) => {
-      if (!value) return "";
-      const escaped = escapeHtml(value);
-      const paragraphs = escaped
-        .split(/\n{2,}/)
-        .map((block) => block.replace(/\n/g, "<br />"));
-      return `<p>${paragraphs.join("</p><p>")}</p>`;
-    };
-
-    const openModal = (card) => {
-      if (!modal) return;
-      const title = card.getAttribute("data-title") || "";
-      const category = card.getAttribute("data-category") || "";
-      const excerpt = card.getAttribute("data-excerpt") || "";
-      const contentRaw = card.getAttribute("data-content") || "";
-      const content = contentRaw ? decodeURIComponent(contentRaw) : "";
-      const image = card.getAttribute("data-image") || "";
-      const date = card.getAttribute("data-date") || "";
-
-      if (modalImage) {
-        if (image) {
-          modalImage.setAttribute("src", image);
-          modalImage.setAttribute("alt", title);
-          modalImage.style.display = "block";
-        } else {
-          modalImage.removeAttribute("src");
-          modalImage.style.display = "none";
-        }
-      }
-
-      if (modalTitle) modalTitle.textContent = title;
-      if (modalCategory) {
-        modalCategory.textContent = category;
-        modalCategory.style.display = category ? "inline-block" : "none";
-      }
-      if (modalDate) modalDate.textContent = formatDate(date);
-      if (modalExcerpt) modalExcerpt.textContent = excerpt;
-      if (modalContent) modalContent.innerHTML = renderContent(content);
-
-      modal.setAttribute("aria-hidden", "false");
-      modal.classList.add("is-open");
-      document.body.style.overflow = "hidden"; // Prevent scrolling
-    };
-
-    document.querySelectorAll(".card").forEach((card) => {
-      card.addEventListener("click", () => openModal(card));
-    });
-
-    const closeModal = () => {
-      if (!modal) return;
-      modal.classList.remove("is-open");
-      modal.setAttribute("aria-hidden", "true");
-      document.body.style.overflow = ""; // Restore scrolling
-    };
-
-    overlay?.addEventListener("click", closeModal);
-    closeButton?.addEventListener("click", closeModal);
-
-    const handleKeydown = (event) => {
-      if (event.key === "Escape" && modal?.classList.contains("is-open"))
-        closeModal();
-    };
-    document.addEventListener("keydown", handleKeydown);
-
-    document.addEventListener(
-      "astro:before-swap",
-      () => {
-        document.removeEventListener("keydown", handleKeydown);
-        document.body.style.overflow = "";
-      },
-      { once: true },
-    );
-  });
-</script>
 
 <style>
   .page {
@@ -249,6 +125,7 @@ const blogPosts = posts ?? [];
     cursor: pointer;
     border-radius: var(--radius-card);
     overflow: hidden;
+    text-decoration: none;
   }
 
   .card-image img {
@@ -292,42 +169,5 @@ const blogPosts = posts ?? [];
 
   .empty p {
     margin: 0 0 0.5rem;
-  }
-
-  .modal-content {
-    max-width: 900px;
-    width: min(100%, 900px);
-  }
-
-  .modal-hero img {
-    width: 100%;
-    max-height: clamp(220px, 40vh, 360px);
-    object-fit: cover;
-    display: block;
-  }
-
-  .modal-body {
-    padding: 2rem;
-    display: grid;
-    gap: 0.8rem;
-  }
-
-  .content {
-    font-size: 1.05rem;
-    line-height: 1.7;
-    color: var(--text);
-    white-space: pre-wrap;
-  }
-
-  @media (max-width: 768px) {
-    .modal-body {
-      padding: 1rem 1rem 1.2rem;
-      gap: 0.6rem;
-    }
-
-    .content {
-      font-size: 1rem;
-      line-height: 1.6;
-    }
   }
 </style>

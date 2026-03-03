@@ -5,6 +5,10 @@ const FALLBACK_MODELS = ["gemini-2.5-flash", "gemini-2.5-flash-lite"];
 const RETRYABLE_STATUS = new Set([429, 500, 502, 503, 504]);
 const MAX_RETRIES_PER_MODEL = 1;
 const PROVIDER_TIMEOUT_MS = 18000;
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const RATE_LIMIT_MAX_REQUESTS = 20;
+const rateLimitStore = globalThis.__chatRateLimitStore ?? new Map();
+globalThis.__chatRateLimitStore = rateLimitStore;
 
 const SYSTEM_PROMPT = `
 Eres el asistente virtual oficial de Yali Salvaje.
@@ -133,9 +137,51 @@ const isLikelyIncompleteAnswer = (text) => {
   return !hasClosingPunctuation && endsWithConnector;
 };
 
+const getClientIp = (request) => {
+  const forwardedFor = request.headers.get("x-forwarded-for");
+  if (forwardedFor) {
+    const firstIp = forwardedFor.split(",")[0]?.trim();
+    if (firstIp) return firstIp;
+  }
+  return request.headers.get("x-nf-client-connection-ip") || "unknown";
+};
+
+const checkRateLimit = (request) => {
+  const now = Date.now();
+  const key = getClientIp(request);
+  const item = rateLimitStore.get(key);
+
+  if (!item || now > item.expiresAt) {
+    rateLimitStore.set(key, { count: 1, expiresAt: now + RATE_LIMIT_WINDOW_MS });
+    return false;
+  }
+
+  item.count += 1;
+  rateLimitStore.set(key, item);
+  return item.count > RATE_LIMIT_MAX_REQUESTS;
+};
+
+const isSameOrigin = (request) => {
+  const origin = request.headers.get("origin");
+  if (!origin) return true;
+  const url = new URL(request.url);
+  return origin === url.origin;
+};
+
 export async function POST({ request }) {
   const apiKey = import.meta.env.GEMINI_API_KEY || import.meta.env.GOOGLE_API_KEY;
   const configuredModel = import.meta.env.GEMINI_MODEL || DEFAULT_MODEL;
+
+  if (!isSameOrigin(request)) {
+    return Response.json({ error: "Origen no permitido." }, { status: 403 });
+  }
+
+  if (checkRateLimit(request)) {
+    return Response.json(
+      { error: "Demasiadas solicitudes. Intenta nuevamente en un minuto." },
+      { status: 429 },
+    );
+  }
 
   if (!apiKey) {
     return Response.json(

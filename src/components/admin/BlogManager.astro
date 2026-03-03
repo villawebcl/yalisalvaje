@@ -48,14 +48,36 @@
             </label>
             <label>
                 Contenido
-                <textarea
-                    name="contenido"
-                    rows="12"
-                    placeholder="Texto completo de la entrada"
-                    required></textarea>
+                <div class="editor-layout">
+                    <section class="editor-pane">
+                        <p class="field-label">Editor Markdown</p>
+                        <div class="md-toolbar" role="toolbar" aria-label="Formato Markdown">
+                            <button type="button" class="secondary md-btn" data-md-action="h2">H2</button>
+                            <button type="button" class="secondary md-btn" data-md-action="h3">H3</button>
+                            <button type="button" class="secondary md-btn" data-md-action="bold">Negrita</button>
+                            <button type="button" class="secondary md-btn" data-md-action="italic">Cursiva</button>
+                            <button type="button" class="secondary md-btn" data-md-action="ul">Lista</button>
+                            <button type="button" class="secondary md-btn" data-md-action="ol">Numerada</button>
+                            <button type="button" class="secondary md-btn" data-md-action="quote">Cita</button>
+                            <button type="button" class="secondary md-btn" data-md-action="link">Enlace</button>
+                            <button type="button" class="secondary md-btn" data-md-action="hr">Separador</button>
+                        </div>
+                        <textarea
+                            id="blog-content-input"
+                            name="contenido"
+                            rows="16"
+                            placeholder="Texto completo de la entrada"
+                            required></textarea>
+                        <p class="md-hint">
+                            Atajos: **negrita**, *cursiva*, - listas, 1. listas numeradas, > cita, [texto](https://url)
+                        </p>
+                    </section>
+                    <section class="preview-pane">
+                        <p class="field-label">Vista previa</p>
+                        <div class="content-preview" id="blog-content-preview"></div>
+                    </section>
+                </div>
             </label>
-            <p class="field-label">Contenido completo (vista previa)</p>
-            <div class="content-preview" id="blog-content-preview"></div>
             <label>
                 Imagen destacada
                 <input type="file" name="imagen" accept="image/*" />
@@ -99,5 +121,82 @@
     .panel-actions {
         display: flex;
         gap: 0.5rem;
+    }
+
+    #blog-modal .modal-panel {
+        width: min(1320px, 97vw);
+        margin-inline: auto;
+    }
+
+    #blog-form {
+        max-width: none;
+        width: 100%;
+        gap: 1rem;
+    }
+
+    #blog-form > label {
+        width: 100%;
+    }
+
+    .md-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+        margin-top: 0;
+        position: sticky;
+        top: 0;
+        z-index: 8;
+        padding: 0.55rem 0.45rem;
+        background: linear-gradient(180deg, rgba(245, 248, 246, 0.98), rgba(245, 248, 246, 0.9));
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: var(--radius-md);
+        backdrop-filter: blur(3px);
+    }
+
+    .md-btn {
+        padding: 0.35rem 0.6rem;
+        font-size: 0.82rem;
+        line-height: 1.1;
+        border-radius: var(--radius-sm);
+    }
+
+    .md-hint {
+        margin: 0.25rem 0 0;
+        font-size: 0.82rem;
+        color: var(--muted);
+    }
+
+    .editor-layout {
+        display: grid;
+        gap: 0.9rem;
+        align-items: stretch;
+    }
+
+    .editor-pane,
+    .preview-pane {
+        background: var(--paper-2);
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: var(--radius-md);
+        padding: 0.65rem;
+    }
+
+    .editor-pane textarea {
+        min-height: 460px;
+        max-height: 68vh;
+        width: 100%;
+        resize: vertical;
+    }
+
+    .preview-pane .content-preview {
+        min-height: 460px;
+        max-height: 68vh;
+        overflow: auto;
+        background: #fff;
+    }
+
+    @media (min-width: 1040px) {
+        .editor-layout {
+            grid-template-columns: 1.08fr 0.92fr;
+        }
     }
 </style>

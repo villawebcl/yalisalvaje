@@ -24,18 +24,19 @@ import Footer from "../components/ui/Footer.astro";
         method="POST"
         data-netlify="true"
         id="contact-form"
-        autocomplete="off"
+        autocomplete="on"
       >
         <input type="hidden" name="form-name" value="contacto" />
         <label>
           Nombre
-          <input type="text" name="nombre" placeholder="Tu nombre" required />
+          <input type="text" name="nombre" autocomplete="name" placeholder="Tu nombre" required />
         </label>
         <label>
           Email
           <input
             type="email"
             name="email"
+            autocomplete="email"
             placeholder="tucorreo@email.com"
             required
           />
@@ -44,6 +45,7 @@ import Footer from "../components/ui/Footer.astro";
           Mensaje
           <textarea
             name="mensaje"
+            autocomplete="off"
             rows="5"
             placeholder="Escribe tu consulta"
             required></textarea>

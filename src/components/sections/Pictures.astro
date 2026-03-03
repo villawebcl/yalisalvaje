@@ -1,5 +1,6 @@
 ---
 import { supabase } from "../../lib/supabaseClient";
+import { buildOptimizedImageUrl } from "../../lib/imageUtils";
 
 const { data: featuredSetting, error: featuredError } = await supabase
   .from("site_settings")
@@ -42,13 +43,16 @@ const fotosDestacadas = fotos ?? [];
         </div>
       ) : (
         fotosDestacadas.map((foto) => (
-          <figure class="card-surface card-hover media-zoom">
+          <figure class="featured-card card-hover media-zoom">
             <img
-              src={foto.url_publica}
+              src={buildOptimizedImageUrl(foto.url_publica, { width: 760, quality: 64 })}
               alt={foto.alt_text ?? "Fotografía del humedal"}
               loading="lazy"
+              decoding="async"
             />
-            <figcaption>{foto.descripcion ?? foto.alt_text ?? "Sin descripción"}</figcaption>
+            <figcaption>
+              <span class="featured-title">{foto.descripcion ?? foto.alt_text ?? "Sin descripción"}</span>
+            </figcaption>
           </figure>
         ))
       )}
@@ -90,23 +94,55 @@ const fotosDestacadas = fotos ?? [];
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   }
 
-  figure {
+  .featured-card {
     margin: 0;
-    border-radius: var(--radius-card);
+    border-radius: 0.22rem;
     overflow: hidden;
+    border: 1px solid rgba(14, 24, 17, 0.12);
+    background: #dae4db;
+    position: relative;
+    box-shadow: 0 8px 18px rgba(9, 20, 13, 0.1);
   }
 
-  img {
+  .featured-card img {
     width: 100%;
-    height: 220px;
+    aspect-ratio: 4 / 5;
+    height: auto;
     object-fit: cover;
+    display: block;
+    transform: scale(1.01);
+    transition: transform 0.35s ease;
   }
 
 
-  figcaption {
-    padding: 0.9rem 1rem 1.1rem;
-    font-size: 0.95rem;
-    color: var(--muted);
+  .featured-card figcaption {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: 0;
+    padding: 1rem 0.9rem 0.85rem;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.97);
+    line-height: 1.35;
+    background: linear-gradient(180deg, rgba(5, 10, 7, 0.02), rgba(5, 10, 7, 0.88) 76%);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+    min-height: 45%;
+    display: flex;
+    align-items: end;
+  }
+
+  .featured-title {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  .featured-card:hover img {
+    transform: scale(1.05);
   }
 
   .empty {
@@ -131,7 +167,7 @@ const fotosDestacadas = fotos ?? [];
   .button {
     background: var(--accent);
     color: white;
-    border-radius: var(--radius-pill);
+    border-radius: 0.32rem;
     padding: 0.9rem 1.8rem;
     text-decoration: none;
     font-weight: 600;

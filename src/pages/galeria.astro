@@ -3,6 +3,7 @@ import Layout from "../layouts/Layout.astro";
 import Header from "../components/ui/Header.astro";
 import Footer from "../components/ui/Footer.astro";
 import { supabase } from "../lib/supabaseClient";
+import { buildOptimizedImageUrl } from "../lib/imageUtils";
 
 const { data: fotos, error } = await supabase
   .from("imagenes")
@@ -27,7 +28,8 @@ const imagenesPayload = JSON.stringify(
   imagenesGaleria.map((foto, index) => ({
     id: foto.id,
     index,
-    url: foto.url_publica,
+    fullUrl: foto.url_publica,
+    thumbUrl: buildOptimizedImageUrl(foto.url_publica, { width: 1200, quality: 62 }),
     alt: foto.alt_text ?? "Fotografia del humedal",
     caption: foto.descripcion ?? foto.alt_text ?? "Sin descripcion",
     detail: foto.detalle ?? "",
@@ -54,9 +56,13 @@ const imagenesPayload = JSON.stringify(
             imagenesIniciales.map((foto, index) => (
               <figure class={`foto-item ${getVariantClass(index)} media-zoom`} tabindex="0" role="button">
                 <img
-                  src={foto.url_publica}
+                  src={buildOptimizedImageUrl(foto.url_publica, {
+                    width: 1200,
+                    quality: 62,
+                  })}
                   alt={foto.alt_text ?? "Fotografía del humedal"}
                   loading="lazy"
+                  decoding="async"
                   data-full={foto.url_publica}
                   data-caption={
                     foto.descripcion ?? foto.alt_text ?? "Sin descripción"
@@ -150,10 +156,11 @@ const imagenesPayload = JSON.stringify(
       figure.setAttribute("role", "button");
 
       const img = document.createElement("img");
-      img.src = foto.url;
+      img.src = foto.thumbUrl || foto.fullUrl;
       img.alt = foto.alt || "Fotografia del humedal";
       img.loading = "lazy";
-      img.setAttribute("data-full", foto.url);
+      img.decoding = "async";
+      img.setAttribute("data-full", foto.fullUrl || foto.thumbUrl || "");
       img.setAttribute("data-caption", foto.caption || "Sin descripcion");
       img.setAttribute("data-detail", foto.detail || "");
 
@@ -355,7 +362,7 @@ const imagenesPayload = JSON.stringify(
 
   .foto-item {
     margin: 0;
-    border-radius: 1rem;
+    border-radius: var(--radius-card);
     overflow: hidden;
     cursor: pointer;
     border: 1px solid rgba(12, 24, 16, 0.08);

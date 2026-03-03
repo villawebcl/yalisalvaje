@@ -1,18 +1,28 @@
 import { createClient } from "@supabase/supabase-js";
+import {
+  buildAdminSessionCookie,
+  buildClearAdminSessionCookie,
+  createAdminSessionToken,
+} from "../../lib/adminSession.js";
 
 const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
-const buildCookie = (value, url, maxAge = 3600) => {
-  const secure = url.protocol === "https:" ? " Secure;" : "";
-  return `admin_session=${value}; Path=/; Max-Age=${maxAge}; SameSite=Lax;${secure}`;
-};
-
 const ADMIN_EMAIL = import.meta.env.ADMIN_EMAIL || "cristianvillalobosvv@gmail.com";
+
+const isSameOrigin = (request) => {
+  const origin = request.headers.get("origin");
+  if (!origin) return true;
+  const url = new URL(request.url);
+  return origin === url.origin;
+};
 
 export async function POST({ request }) {
   if (!supabaseUrl || !supabaseAnonKey) {
     return new Response("Missing Supabase env", { status: 500 });
+  }
+  if (!isSameOrigin(request)) {
+    return new Response("Forbidden origin", { status: 403 });
   }
 
   const { accessToken } = await request.json().catch(() => ({}));
@@ -35,21 +45,27 @@ export async function POST({ request }) {
     return new Response("Forbidden: Not an admin", { status: 403 });
   }
 
-  const url = new URL(request.url);
+  const sessionToken = createAdminSessionToken(data.user.email);
+  if (!sessionToken) {
+    return new Response("Missing ADMIN_SESSION_SECRET", { status: 500 });
+  }
+
   return new Response("OK", {
     status: 200,
     headers: {
-      "Set-Cookie": buildCookie("1", url),
+      "Set-Cookie": buildAdminSessionCookie(sessionToken, request),
     },
   });
 }
 
 export async function DELETE({ request }) {
-  const url = new URL(request.url);
+  if (!isSameOrigin(request)) {
+    return new Response("Forbidden origin", { status: 403 });
+  }
   return new Response("OK", {
     status: 200,
     headers: {
-      "Set-Cookie": buildCookie("", url, 0),
+      "Set-Cookie": buildClearAdminSessionCookie(request),
     },
   });
 }

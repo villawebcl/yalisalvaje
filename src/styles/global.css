@@ -20,14 +20,14 @@
   --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   
-  --radius-sm: 0.5rem;
-  --radius-md: 0.75rem;
-  --radius-lg: 1rem;
-  --radius-xl: 1.5rem;
-  --radius-pill: 999px;
+  --radius-sm: 0.06rem;
+  --radius-md: 0.22rem;
+  --radius-lg: 0.28rem;
+  --radius-xl: 0.18rem;
+  --radius-pill: 0.32rem;
   --radius-round: 50%;
   --radius: var(--radius-lg);
-  --radius-card: 1.15rem;
+  --radius-card: 0.18rem;
   --content: 1200px; /* Slightly wider content area */
   
   --font-display: 'Alegreya', serif;
@@ -48,11 +48,10 @@ html {
 body {
   margin: 0;
   font-family: var(--font-body);
-  background-color: var(--bg);
+  background-color: #f6f8f5;
   background-image: 
-    radial-gradient(at 0% 0%, hsla(253,16%,7%,0) 0, transparent 50%), 
-    radial-gradient(at 50% 0%, hsla(225,39%,30%,0) 0, transparent 50%), 
-    radial-gradient(at 100% 0%, hsla(339,49%,30%,0) 0, transparent 50%);
+    radial-gradient(circle at 12% 0%, rgba(165, 210, 175, 0.25), transparent 38%),
+    radial-gradient(circle at 88% 0%, rgba(190, 215, 245, 0.2), transparent 42%);
   color: var(--text);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -180,7 +179,7 @@ p {
   z-index: 3000;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.24s ease;
+  transition: opacity 0.28s ease;
 }
 
 .ui-modal.is-open {
@@ -191,8 +190,8 @@ p {
 .ui-modal-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(5, 9, 7, 0.65);
-  backdrop-filter: blur(4px);
+  background: radial-gradient(circle at 50% 18%, rgba(10, 22, 15, 0.5), rgba(6, 10, 8, 0.76));
+  backdrop-filter: blur(5px);
 }
 
 .ui-modal-panel {
@@ -200,12 +199,14 @@ p {
   width: min(100%, 900px);
   max-height: 86vh;
   overflow: auto;
-  background: var(--paper);
+  background: linear-gradient(180deg, rgba(252, 253, 252, 0.98), rgba(245, 248, 246, 0.98));
   border-radius: var(--radius-xl);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: var(--shadow-lg);
-  transform: translateY(14px) scale(0.98);
-  transition: transform 0.24s ease;
+  border: 1px solid rgba(16, 28, 19, 0.14);
+  box-shadow:
+    0 26px 60px rgba(6, 14, 10, 0.38),
+    0 8px 20px rgba(6, 14, 10, 0.2);
+  transform: translateY(16px) scale(0.97);
+  transition: transform 0.28s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 .ui-modal.is-open .ui-modal-panel {
@@ -214,18 +215,25 @@ p {
 
 .ui-modal-close {
   position: absolute;
-  top: 1rem;
-  right: 1rem;
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  top: 0.7rem;
+  right: 0.7rem;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(0, 0, 0, 0.14);
   font-size: 2rem;
   line-height: 1;
-  width: 48px;
-  height: 48px;
+  width: 42px;
+  height: 42px;
   border-radius: var(--radius-round);
   cursor: pointer;
   color: var(--text);
   z-index: 2;
+  box-shadow: 0 4px 12px rgba(8, 13, 10, 0.18);
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.ui-modal-close:hover {
+  transform: translateY(-1px);
+  background: #fff;
 }
 
 @media (max-width: 768px) {

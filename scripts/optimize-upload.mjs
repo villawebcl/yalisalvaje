@@ -17,8 +17,9 @@ const getArg = (name, fallback) => {
 const inputPath = getArg("--input", "");
 const bucket = getArg("--bucket", "media");
 const folder = getArg("--folder", "galeria");
-const width = Number(getArg("--width", "1600"));
-const quality = Number(getArg("--quality", "80"));
+const width = Number(getArg("--width", "1400"));
+const quality = Number(getArg("--quality", "72"));
+const format = getArg("--format", "webp").toLowerCase();
 const outputDir = getArg("--output", path.join(__dirname, "..", "tmp", "optimized"));
 const mapPath = getArg("--map", path.join(__dirname, "..", "tmp", "image-map.json"));
 
@@ -38,7 +39,7 @@ const resolveFiles = (input) => {
   const stat = fs.statSync(input);
   if (stat.isDirectory()) {
     return fs.readdirSync(input)
-      .filter((file) => /\.(jpe?g|png|webp)$/i.test(file))
+      .filter((file) => /\.(jpe?g|png|webp|avif)$/i.test(file))
       .map((file) => path.join(input, file));
   }
   return [input];
@@ -50,14 +51,16 @@ const toSafeName = (file) =>
     .replace(/\s+/g, "-")
     .replace(/[^a-z0-9-]/g, "");
 
-const buildOutputPath = (file) => path.join(outputDir, `${toSafeName(file)}.webp`);
+const buildOutputPath = (file) => path.join(outputDir, `${toSafeName(file)}.${format}`);
 
 const optimize = async (file) => {
   const output = buildOutputPath(file);
-  await sharp(file)
-    .resize({ width, withoutEnlargement: true })
-    .webp({ quality })
-    .toFile(output);
+  const pipeline = sharp(file).resize({ width, withoutEnlargement: true });
+  if (format === "avif") {
+    await pipeline.avif({ quality }).toFile(output);
+  } else {
+    await pipeline.webp({ quality }).toFile(output);
+  }
   return output;
 };
 
@@ -79,9 +82,9 @@ const uploadFiles = async (files, originals) => {
     const storagePath = `${folder}/${Date.now()}-${fileName}`;
     const data = fs.readFileSync(file);
     const { error } = await supabase.storage.from(bucket).upload(storagePath, data, {
-      contentType: "image/webp",
+      contentType: format === "avif" ? "image/avif" : "image/webp",
       upsert: false,
-      cacheControl: "3600",
+      cacheControl: "31536000",
     });
 
     if (error) {

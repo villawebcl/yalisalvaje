@@ -1,3 +1,7 @@
+---
+import { buildOptimizedImageUrl } from "../../lib/imageUtils";
+---
+
 <section class="humedal">
   <div class="container humedal-inner">
     <div>
@@ -26,9 +30,13 @@
     </div>
     <div class="mapa">
       <img
-        src="https://wkayvtztiijqpvoxtcxj.supabase.co/storage/v1/object/public/media/site/1769636653052-mapayali.webp"
+        src={buildOptimizedImageUrl("https://wkayvtztiijqpvoxtcxj.supabase.co/storage/v1/object/public/media/site/1769636653052-mapayali.webp", {
+          width: 1100,
+          quality: 66,
+        })}
         alt="Mapa del Humedal El Yali"
         loading="lazy"
+        decoding="async"
       />
       <p class="caption">
         Mapa publicado por el Instituto Geográfico Militar de Chile en 1954.

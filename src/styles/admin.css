@@ -158,12 +158,12 @@ input[type="file"]:focus {
 }
 
 .modal-panel {
-    width: min(720px, 92vw);
-    max-height: 90vh;
+    width: min(1180px, 96vw);
+    max-height: 92vh;
     overflow: auto;
     background: var(--paper);
     border-radius: var(--radius-xl);
-    padding: 2.5rem;
+    padding: 1.4rem 1.4rem 1.6rem;
     position: relative;
     box-shadow: var(--shadow-lg);
     border: 1px solid rgba(0, 0, 0, 0.05);
@@ -243,9 +243,58 @@ input[type="file"]:focus {
     background: var(--paper-2);
     color: var(--text);
     font-size: 1rem;
-    white-space: pre-wrap;
+    line-height: 1.6;
     min-height: 120px;
     font-family: var(--font-body);
+}
+
+.content-preview p {
+    margin: 0 0 0.55rem;
+}
+
+.content-preview h3,
+.content-preview h4,
+.content-preview h5 {
+    margin: 0.75rem 0 0.35rem;
+    line-height: 1.25;
+}
+
+.content-preview h3 {
+    font-size: 1.25rem;
+}
+
+.content-preview h4 {
+    font-size: 1.12rem;
+}
+
+.content-preview ul,
+.content-preview ol {
+    margin: 0.2rem 0 0.6rem 1.05rem;
+    padding: 0;
+}
+
+.content-preview li {
+    margin: 0.14rem 0;
+}
+
+.content-preview blockquote {
+    margin: 0.3rem 0 0.6rem;
+    padding: 0.4rem 0.6rem;
+    border-left: 3px solid rgba(20, 83, 45, 0.45);
+    background: rgba(20, 83, 45, 0.08);
+}
+
+.content-preview code {
+    background: rgba(0, 0, 0, 0.08);
+    padding: 0.08rem 0.3rem;
+    border-radius: 0.2rem;
+    font-size: 0.93em;
+}
+
+.content-preview hr {
+    border: 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.14);
+    margin: 0.6rem 0;
 }
 
 /* Lists / Grid */

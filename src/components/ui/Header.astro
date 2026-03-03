@@ -1,4 +1,6 @@
 ---
+import { buildOptimizedImageUrl } from "../../lib/imageUtils";
+
 const navItems = [
   { href: "/", label: "Inicio" },
   { href: "/blog", label: "Blog" },
@@ -9,16 +11,21 @@ const navItems = [
 const currentPath = Astro.url.pathname;
 const isActive = (href) =>
   href === "/" ? currentPath === "/" : currentPath.startsWith(href);
+const logoUrl = buildOptimizedImageUrl(
+  "https://wkayvtztiijqpvoxtcxj.supabase.co/storage/v1/object/public/media/site/1769636652439-logo.webp",
+  { width: 420, quality: 72 },
+);
 ---
 
 <header class="site-header" data-menu="closed">
   <div class="container header-inner">
     <a class="brand" href="/" aria-label="Inicio">
       <img
-        src="https://wkayvtztiijqpvoxtcxj.supabase.co/storage/v1/object/public/media/site/1769636652439-logo.webp"
+        src={logoUrl}
         alt="Yali Salvaje"
         width="200"
         height="68"
+        decoding="async"
       />
     </a>
 
