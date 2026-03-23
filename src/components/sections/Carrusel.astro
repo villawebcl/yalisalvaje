@@ -1,5 +1,5 @@
 ---
-import { buildOptimizedImageUrl } from "../../lib/imageUtils";
+import { buildOptimizedImageUrl, buildResponsiveSrcSet } from "../../lib/imageUtils";
 
 const images = [
   {
@@ -26,7 +26,11 @@ const images = [
 
 const heroImages = images.map((image) => ({
   ...image,
-  src: buildOptimizedImageUrl(image.src, { width: 1920, quality: 62 }),
+  src: buildOptimizedImageUrl(image.src, { width: 1400, quality: 58 }),
+  srcset: buildResponsiveSrcSet(image.src, {
+    widths: [640, 960, 1400],
+    quality: 58,
+  }),
 }));
 ---
 
@@ -46,6 +50,8 @@ const heroImages = images.map((image) => ({
       heroImages.map((image, index) => (
         <img
           src={image.src}
+          srcset={image.srcset || undefined}
+          sizes="100vw"
           alt={image.alt}
           loading={index === 0 ? "eager" : "lazy"}
           fetchpriority={index === 0 ? "high" : "low"}

@@ -6,9 +6,17 @@ import Carrusel from "../components/sections/Carrusel.astro";
 import About from "../components/sections/About.astro";
 import AboutHumedal from "../components/sections/AboutHumedal.astro";
 import Pictures from "../components/sections/Pictures.astro";
+import { buildOptimizedImageUrl } from "../lib/imageUtils";
+
+// Preload first hero image for best LCP
+const firstHeroSrc = buildOptimizedImageUrl(
+  "https://wkayvtztiijqpvoxtcxj.supabase.co/storage/v1/object/public/media/site/1769636649979-xolmis-pyrope.webp",
+  { width: 960, quality: 58 }
+);
 ---
 
 <Layout title="Yali Salvaje | Humedal El Yali">
+  <link slot="head" rel="preload" as="image" href={firstHeroSrc} fetchpriority="high" />
   <Header />
   <Carrusel />
   <About />

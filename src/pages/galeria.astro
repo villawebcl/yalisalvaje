@@ -3,7 +3,7 @@ import Layout from "../layouts/Layout.astro";
 import Header from "../components/ui/Header.astro";
 import Footer from "../components/ui/Footer.astro";
 import { supabase } from "../lib/supabaseClient";
-import { buildOptimizedImageUrl } from "../lib/imageUtils";
+import { buildOptimizedImageUrl, buildResponsiveSrcSet } from "../lib/imageUtils";
 
 const { data: fotos, error } = await supabase
   .from("imagenes")
@@ -29,7 +29,7 @@ const imagenesPayload = JSON.stringify(
     id: foto.id,
     index,
     fullUrl: foto.url_publica,
-    thumbUrl: buildOptimizedImageUrl(foto.url_publica, { width: 1200, quality: 62 }),
+    thumbUrl: buildOptimizedImageUrl(foto.url_publica, { width: 700, quality: 62 }),
     alt: foto.alt_text ?? "Fotografia del humedal",
     caption: foto.descripcion ?? foto.alt_text ?? "Sin descripcion",
     detail: foto.detalle ?? "",
@@ -56,17 +56,14 @@ const imagenesPayload = JSON.stringify(
             imagenesIniciales.map((foto, index) => (
               <figure class={`foto-item ${getVariantClass(index)} media-zoom`} tabindex="0" role="button">
                 <img
-                  src={buildOptimizedImageUrl(foto.url_publica, {
-                    width: 1200,
-                    quality: 62,
-                  })}
+                  src={buildOptimizedImageUrl(foto.url_publica, { width: 700, quality: 62 })}
+                  srcset={buildResponsiveSrcSet(foto.url_publica, { widths: [400, 700], quality: 62 }) || undefined}
+                  sizes="(max-width: 780px) 50vw, 25vw"
                   alt={foto.alt_text ?? "Fotografía del humedal"}
                   loading="lazy"
                   decoding="async"
                   data-full={foto.url_publica}
-                  data-caption={
-                    foto.descripcion ?? foto.alt_text ?? "Sin descripción"
-                  }
+                  data-caption={foto.descripcion ?? foto.alt_text ?? "Sin descripción"}
                   data-detail={foto.detalle ?? ""}
                 />
                 <figcaption>

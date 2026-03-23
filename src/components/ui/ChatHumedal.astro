@@ -23,16 +23,30 @@
         </button>
       </header>
 
-      <div class="chat-messages" data-chat-messages>
-        <article class="msg-wrap msg-wrap-assistant">
-          <span class="msg-avatar msg-avatar-assistant" aria-hidden="true">IA</span>
-          <div class="msg-stack">
-            <p class="msg-role">Asistente</p>
-            <div class="msg msg-assistant">
-              Hola. Puedo ayudarte con preguntas sobre biodiversidad, ubicacion e informacion del Humedal El Yali.
+      <div class="chat-messages-wrap">
+        <div class="chat-messages" data-chat-messages>
+          <article class="msg-wrap msg-wrap-assistant">
+            <span class="msg-avatar msg-avatar-assistant" aria-hidden="true">IA</span>
+            <div class="msg-stack">
+              <p class="msg-role">Asistente</p>
+              <div class="msg msg-assistant">
+                Hola. Puedo ayudarte con preguntas sobre biodiversidad, ubicación e información del Humedal El Yali.
+              </div>
+            </div>
+          </article>
+          <div class="chat-suggestions" data-chat-suggestions>
+            <p class="suggestions-label">Preguntas frecuentes</p>
+            <div class="suggestions-chips">
+              <button class="suggestion-chip" type="button" data-question="¿Qué aves migratorias se pueden ver en El Yali?">¿Qué aves migratorias hay?</button>
+              <button class="suggestion-chip" type="button" data-question="¿Cómo llegar al Humedal El Yali desde Santiago?">¿Cómo llegar desde Santiago?</button>
+              <button class="suggestion-chip" type="button" data-question="¿Cuál es la mejor época del año para visitar El Yali y fotografiar aves?">¿Cuándo es mejor visitar?</button>
+              <button class="suggestion-chip" type="button" data-question="¿Qué mamíferos habitan el Humedal El Yali?">¿Qué mamíferos hay?</button>
             </div>
           </div>
-        </article>
+        </div>
+        <button class="scroll-bottom-btn" type="button" data-scroll-bottom hidden aria-label="Ir al fondo de la conversación">
+          ↓ Ir al fondo
+        </button>
       </div>
 
       <form class="chat-form" data-chat-form>
@@ -40,15 +54,19 @@
         <textarea
           id="chat-input"
           name="message"
-          rows="3"
+          rows="1"
           maxlength="600"
-          placeholder="Ejemplo: Que aves migratorias se observan en El Yali?"
+          placeholder="Escribe tu pregunta sobre El Yali..."
           required
         ></textarea>
         <div class="chat-actions">
-          <small data-chat-status></small>
+          <div class="chat-actions-left">
+            <small class="char-counter" data-char-counter aria-live="polite">0/600</small>
+            <small data-chat-status></small>
+          </div>
           <button type="submit" data-chat-send>Enviar</button>
         </div>
+        <p class="chat-hint">Enter para enviar · Shift+Enter para nueva línea</p>
       </form>
     </section>
   </div>
@@ -64,8 +82,7 @@
 
   .chat-trigger {
     border: 1px solid rgba(255, 255, 255, 0.26);
-    background:
-      linear-gradient(145deg, rgba(20, 83, 45, 0.95), rgba(15, 62, 35, 0.95));
+    background: linear-gradient(145deg, rgba(20, 83, 45, 0.95), rgba(15, 62, 35, 0.95));
     color: #fff;
     border-radius: var(--radius-pill);
     padding: 0.85rem 1.2rem;
@@ -109,8 +126,7 @@
 
   .chat-panel {
     position: relative;
-    background:
-      linear-gradient(162deg, rgba(255, 255, 255, 0.98), rgba(244, 248, 245, 0.98));
+    background: linear-gradient(162deg, rgba(255, 255, 255, 0.98), rgba(244, 248, 245, 0.98));
     width: min(100vw - 1rem, 470px);
     max-height: min(82vh, 700px);
     margin: 0.5rem;
@@ -163,17 +179,89 @@
     padding: 0.35rem 0.75rem;
   }
 
+  /* Messages wrap — takes the 1fr grid row */
+  .chat-messages-wrap {
+    position: relative;
+    overflow: hidden;
+    min-height: 0;
+  }
+
   .chat-messages {
-    overflow: auto;
+    height: 100%;
+    overflow-y: auto;
     padding: 1rem;
     display: grid;
     gap: 0.95rem;
+    align-content: start;
     background:
       radial-gradient(circle at 0 0, rgba(203, 228, 211, 0.45), transparent 42%),
       radial-gradient(circle at 100% 100%, rgba(219, 233, 255, 0.35), transparent 45%),
       var(--paper-2);
   }
 
+  /* Suggested questions */
+  .chat-suggestions {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .suggestions-label {
+    margin: 0;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    font-weight: 700;
+  }
+
+  .suggestions-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .suggestion-chip {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(20, 83, 45, 0.22);
+    color: rgba(20, 83, 45, 0.9);
+    border-radius: var(--radius-pill);
+    padding: 0.35rem 0.7rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+    text-align: left;
+  }
+
+  .suggestion-chip:hover {
+    background: rgba(20, 83, 45, 0.08);
+    border-color: rgba(20, 83, 45, 0.4);
+  }
+
+  /* Scroll-to-bottom button */
+  .scroll-bottom-btn {
+    position: absolute;
+    bottom: 0.65rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(20, 83, 45, 0.92);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-pill);
+    padding: 0.3rem 0.85rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(6, 18, 11, 0.3);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .scroll-bottom-btn:hover {
+    background: rgba(20, 83, 45, 1);
+  }
+
+  /* Message structures */
   .msg-wrap {
     display: grid;
     grid-template-columns: 30px minmax(0, 1fr);
@@ -236,9 +324,35 @@
   .msg {
     padding: 0.72rem 0.82rem;
     border-radius: 0.5rem;
-    line-height: 1.43;
-    white-space: pre-wrap;
+    line-height: 1.5;
     max-width: 100%;
+  }
+
+  /* Markdown styles inside assistant messages */
+  .msg-assistant p {
+    margin: 0 0 0.5em;
+  }
+  .msg-assistant p:last-child {
+    margin-bottom: 0;
+  }
+  .msg-assistant ul,
+  .msg-assistant ol {
+    margin: 0.35em 0 0.5em;
+    padding-left: 1.3em;
+  }
+  .msg-assistant li {
+    margin-bottom: 0.2em;
+  }
+  .msg-assistant strong {
+    font-weight: 700;
+  }
+  .msg-assistant em {
+    font-style: italic;
+  }
+
+  /* User messages remain plain text */
+  .msg-user {
+    white-space: pre-wrap;
   }
 
   .msg-user {
@@ -254,17 +368,20 @@
   .msg-assistant {
     background: linear-gradient(145deg, #ffffff, #f3f5f8);
     border: 1px solid rgba(8, 14, 20, 0.09);
+    color: #1a1f24;
     box-shadow:
       0 8px 18px rgba(9, 14, 21, 0.08),
       inset 0 1px 0 rgba(255, 255, 255, 0.72);
     border-bottom-left-radius: 0.2rem;
   }
 
+  /* Typing indicator */
   .msg-typing {
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
     min-width: 72px;
+    min-height: 1.2em;
   }
 
   .typing-dot {
@@ -275,43 +392,36 @@
     animation: typingPulse 1s infinite ease-in-out;
   }
 
-  .typing-dot:nth-child(2) {
-    animation-delay: 0.12s;
-  }
-
-  .typing-dot:nth-child(3) {
-    animation-delay: 0.24s;
-  }
+  .typing-dot:nth-child(2) { animation-delay: 0.12s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.24s; }
 
   @keyframes typingPulse {
-    0%, 80%, 100% {
-      transform: translateY(0);
-      opacity: 0.32;
-    }
-    40% {
-      transform: translateY(-2px);
-      opacity: 1;
-    }
+    0%, 80%, 100% { transform: translateY(0); opacity: 0.32; }
+    40% { transform: translateY(-2px); opacity: 1; }
   }
 
+  /* Form */
   .chat-form {
     border-top: 1px solid rgba(0, 0, 0, 0.08);
     background: rgba(255, 255, 255, 0.96);
-    padding: 0.85rem;
+    padding: 0.75rem 0.85rem 0.6rem;
     display: grid;
-    gap: 0.6rem;
+    gap: 0.45rem;
   }
 
   .chat-form textarea {
     width: 100%;
-    resize: vertical;
-    min-height: 84px;
-    max-height: 160px;
+    resize: none;
+    min-height: 42px;
+    max-height: 150px;
     border-radius: 0.4rem;
     border: 1px solid rgba(0, 0, 0, 0.15);
-    padding: 0.65rem 0.75rem;
+    padding: 0.6rem 0.75rem;
     font: inherit;
+    font-size: 0.95rem;
     background: rgba(255, 255, 255, 0.92);
+    overflow-y: auto;
+    line-height: 1.45;
   }
 
   .chat-form textarea:focus {
@@ -324,15 +434,43 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.5rem;
   }
 
-  .chat-actions small {
+  .chat-actions-left {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .char-counter {
     color: var(--muted);
-    min-height: 1.2em;
+    font-size: 0.78rem;
+    white-space: nowrap;
+    transition: color 0.15s ease;
   }
 
-  .chat-actions button {
+  .char-counter.is-warning {
+    color: #b45309;
+  }
+
+  .char-counter.is-danger {
+    color: #dc2626;
+    font-weight: 700;
+  }
+
+  [data-chat-status] {
+    color: var(--muted);
+    font-size: 0.8rem;
+    min-height: 1em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .chat-actions button[type="submit"] {
     border: 0;
     border-radius: var(--radius-pill);
     background: var(--accent);
@@ -343,11 +481,20 @@
     box-shadow:
       0 8px 18px rgba(7, 39, 20, 0.26),
       inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 
-  .chat-actions button:disabled {
+  .chat-actions button[type="submit"]:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+
+  .chat-hint {
+    margin: 0;
+    font-size: 0.72rem;
+    color: rgba(0, 0, 0, 0.3);
+    line-height: 1;
   }
 
   .sr-only {
@@ -389,10 +536,56 @@
       height: 26px;
       font-size: 0.6rem;
     }
+
+    .chat-hint {
+      display: none;
+    }
   }
 </style>
 
 <script>
+  const MAX_CHARS = 600;
+
+  // ── Markdown renderer ────────────────────────────────────────────────────────
+  const escapeHtml = (s) =>
+    s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  const renderMarkdown = (raw) => {
+    let s = escapeHtml(raw);
+
+    // Bold **text**
+    s = s.replace(/\*\*([^*\n]+?)\*\*/g, "<strong>$1</strong>");
+
+    // Italic *text* (not adjacent to another *)
+    s = s.replace(/(?<!\*)\*([^*\n]+?)\*(?!\*)/g, "<em>$1</em>");
+
+    // Split into paragraph blocks by double newline
+    const blocks = s.split(/\n{2,}/);
+
+    const html = blocks.map((block) => {
+      const lines = block.split("\n").filter((l) => l.trim() !== "");
+      if (lines.length === 0) return "";
+
+      const isUnordered = lines.every((l) => /^[-*•]\s/.test(l));
+      const isOrdered = lines.every((l) => /^\d+[.)]\s/.test(l));
+
+      if (isUnordered) {
+        const items = lines.map((l) => `<li>${l.replace(/^[-*•]\s+/, "")}</li>`).join("");
+        return `<ul>${items}</ul>`;
+      }
+
+      if (isOrdered) {
+        const items = lines.map((l) => `<li>${l.replace(/^\d+[.)]\s+/, "")}</li>`).join("");
+        return `<ol>${items}</ol>`;
+      }
+
+      return `<p>${lines.join("<br>")}</p>`;
+    });
+
+    return html.join("");
+  };
+
+  // ── Widget init ──────────────────────────────────────────────────────────────
   const initChatWidget = (root) => {
     if (!(root instanceof HTMLElement) || root.dataset.chatReady === "true") return;
     root.dataset.chatReady = "true";
@@ -405,92 +598,179 @@
     const textarea = root.querySelector("#chat-input");
     const sendButton = root.querySelector("[data-chat-send]");
     const status = root.querySelector("[data-chat-status]");
+    const charCounter = root.querySelector("[data-char-counter]");
+    const scrollBtn = root.querySelector("[data-scroll-bottom]");
+    const suggestionsEl = root.querySelector("[data-chat-suggestions]");
+
     const history = [];
     let openFrameId = 0;
+    let suggestionsVisible = true;
+
+    // Astro CSS scope attribute
     const scopeAttrName = messages?.firstElementChild
       ?.getAttributeNames()
       .find((name) => name.startsWith("data-astro-cid"));
 
-    const createScopedElement = (tagName, className) => {
-      const element = document.createElement(tagName);
-      if (className) element.className = className;
-      if (scopeAttrName) element.setAttribute(scopeAttrName, "");
-      return element;
+    const scope = (el) => {
+      if (scopeAttrName) el.setAttribute(scopeAttrName, "");
+      return el;
     };
 
-    const appendMessage = (text, role) => {
-      if (!(messages instanceof HTMLElement)) return;
-      const wrap = createScopedElement(
-        "article",
-        `msg-wrap ${role === "user" ? "msg-wrap-user" : "msg-wrap-assistant"}`,
-      );
+    const el = (tagName, className) => {
+      const e = document.createElement(tagName);
+      if (className) e.className = className;
+      return scope(e);
+    };
 
-      const avatar = createScopedElement(
-        "span",
-        `msg-avatar ${role === "user" ? "msg-avatar-user" : "msg-avatar-assistant"}`,
-      );
-      avatar.textContent = role === "user" ? "TÚ" : "IA";
+    // ── History ────────────────────────────────────────────────────────────────
+    const addToHistory = (role, text) => {
+      history.push({ role, text });
+      if (history.length > 10) history.shift();
+    };
+
+    // ── Scroll helpers ─────────────────────────────────────────────────────────
+    const scrollToBottom = () => {
+      if (messages instanceof HTMLElement) messages.scrollTop = messages.scrollHeight;
+    };
+
+    const updateScrollButton = () => {
+      if (!(messages instanceof HTMLElement) || !(scrollBtn instanceof HTMLElement)) return;
+      const fromBottom = messages.scrollHeight - messages.scrollTop - messages.clientHeight;
+      scrollBtn.hidden = fromBottom < 80;
+    };
+
+    messages?.addEventListener("scroll", updateScrollButton, { passive: true });
+    scrollBtn?.addEventListener("click", () => {
+      scrollToBottom();
+      if (scrollBtn instanceof HTMLElement) scrollBtn.hidden = true;
+    });
+
+    // ── Suggestions ────────────────────────────────────────────────────────────
+    const hideSuggestions = () => {
+      if (suggestionsVisible && suggestionsEl instanceof HTMLElement) {
+        suggestionsEl.hidden = true;
+        suggestionsVisible = false;
+      }
+    };
+
+    root.querySelectorAll(".suggestion-chip").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        const question = chip.dataset.question;
+        if (!question || !(textarea instanceof HTMLTextAreaElement)) return;
+        textarea.value = question;
+        autoResize();
+        updateCounter();
+        hideSuggestions();
+        form?.requestSubmit();
+      });
+    });
+
+    // ── Char counter ───────────────────────────────────────────────────────────
+    const updateCounter = () => {
+      if (!(textarea instanceof HTMLTextAreaElement) || !(charCounter instanceof HTMLElement)) return;
+      const len = textarea.value.length;
+      charCounter.textContent = `${len}/${MAX_CHARS}`;
+      charCounter.classList.toggle("is-warning", len >= 500 && len < 570);
+      charCounter.classList.toggle("is-danger", len >= 570);
+    };
+
+    // ── Auto-resize textarea ───────────────────────────────────────────────────
+    const autoResize = () => {
+      if (!(textarea instanceof HTMLTextAreaElement)) return;
+      textarea.style.height = "auto";
+      textarea.style.height = Math.min(textarea.scrollHeight, 150) + "px";
+    };
+
+    textarea?.addEventListener("input", () => {
+      autoResize();
+      updateCounter();
+    });
+
+    // ── Enter to send ──────────────────────────────────────────────────────────
+    textarea?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        form?.requestSubmit();
+      }
+    });
+
+    // ── Build message elements ─────────────────────────────────────────────────
+    const buildMessageWrap = (role) => {
+      const isUser = role === "user";
+      const wrap = el("article", `msg-wrap ${isUser ? "msg-wrap-user" : "msg-wrap-assistant"}`);
+
+      const avatar = el("span", `msg-avatar ${isUser ? "msg-avatar-user" : "msg-avatar-assistant"}`);
+      avatar.textContent = isUser ? "TÚ" : "IA";
       avatar.setAttribute("aria-hidden", "true");
 
-      const stack = createScopedElement("div", "msg-stack");
+      const stack = el("div", "msg-stack");
+      const roleLabel = el("p", "msg-role");
+      roleLabel.textContent = isUser ? "Tu pregunta" : "Asistente";
 
-      const roleLabel = createScopedElement("p", "msg-role");
-      roleLabel.textContent = role === "user" ? "Tu pregunta" : "Asistente";
-
-      const bubble = createScopedElement(
-        "div",
-        `msg ${role === "user" ? "msg-user" : "msg-assistant"}`,
-      );
-      bubble.textContent = text;
+      const bubble = el("div", `msg ${isUser ? "msg-user" : "msg-assistant"}`);
 
       stack.append(roleLabel, bubble);
-      if (role === "user") {
+      if (isUser) {
         wrap.append(stack, avatar);
       } else {
         wrap.append(avatar, stack);
       }
-      messages.appendChild(wrap);
-      messages.scrollTop = messages.scrollHeight;
 
-      history.push({ role, text });
-      if (history.length > 10) {
-        history.shift();
-      }
+      return { wrap, bubble };
+    };
+
+    const appendUserMessage = (text) => {
+      const { wrap, bubble } = buildMessageWrap("user");
+      bubble.textContent = text;
+      messages?.appendChild(wrap);
+      scrollToBottom();
+      addToHistory("user", text);
+    };
+
+    const appendAssistantMessage = (text) => {
+      const { wrap, bubble } = buildMessageWrap("assistant");
+      bubble.innerHTML = renderMarkdown(text);
+      messages?.appendChild(wrap);
+      scrollToBottom();
+      addToHistory("assistant", text);
+      updateScrollButton();
+    };
+
+    const createStreamingBubble = () => {
+      const { wrap, bubble } = buildMessageWrap("assistant");
+      bubble.textContent = "";
+      messages?.appendChild(wrap);
+      scrollToBottom();
+      return { wrap, bubble };
     };
 
     const appendTypingMessage = () => {
-      if (!(messages instanceof HTMLElement)) return null;
-
-      const wrap = createScopedElement("article", "msg-wrap msg-wrap-assistant");
+      const wrap = el("article", "msg-wrap msg-wrap-assistant");
       wrap.setAttribute("data-typing", "true");
 
-      const avatar = createScopedElement("span", "msg-avatar msg-avatar-assistant");
+      const avatar = el("span", "msg-avatar msg-avatar-assistant");
       avatar.textContent = "IA";
       avatar.setAttribute("aria-hidden", "true");
 
-      const stack = createScopedElement("div", "msg-stack");
-
-      const roleLabel = createScopedElement("p", "msg-role");
+      const stack = el("div", "msg-stack");
+      const roleLabel = el("p", "msg-role");
       roleLabel.textContent = "Asistente";
 
-      const bubble = createScopedElement("div", "msg msg-assistant msg-typing");
-      for (let i = 0; i < 3; i += 1) {
-        const dot = createScopedElement("span", "typing-dot");
-        bubble.appendChild(dot);
+      const bubble = el("div", "msg msg-assistant msg-typing");
+      for (let i = 0; i < 3; i++) {
+        bubble.appendChild(el("span", "typing-dot"));
       }
 
       stack.append(roleLabel, bubble);
       wrap.append(avatar, stack);
-      messages.appendChild(wrap);
-      messages.scrollTop = messages.scrollHeight;
+      messages?.appendChild(wrap);
+      scrollToBottom();
       return wrap;
     };
 
+    // ── Modal open/close ───────────────────────────────────────────────────────
     const clearPendingModalEffects = () => {
-      if (openFrameId) {
-        cancelAnimationFrame(openFrameId);
-        openFrameId = 0;
-      }
+      if (openFrameId) { cancelAnimationFrame(openFrameId); openFrameId = 0; }
     };
 
     const setModalState = (open) => {
@@ -518,17 +798,14 @@
     };
 
     trigger?.addEventListener("click", () => setModalState(true));
-
-    closeButtons.forEach((button) => {
-      button.addEventListener("click", () => setModalState(false));
-    });
-
-    document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape" && modal instanceof HTMLElement && modal.classList.contains("is-open")) {
+    closeButtons.forEach((btn) => btn.addEventListener("click", () => setModalState(false)));
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && modal instanceof HTMLElement && modal.classList.contains("is-open")) {
         setModalState(false);
       }
     });
 
+    // ── Form submit ────────────────────────────────────────────────────────────
     form?.addEventListener("submit", async (event) => {
       event.preventDefault();
       if (!(textarea instanceof HTMLTextAreaElement) || !(sendButton instanceof HTMLButtonElement)) return;
@@ -536,48 +813,111 @@
       const message = textarea.value.trim();
       if (!message) return;
 
-      appendMessage(message, "user");
-      textarea.value = "";
-      sendButton.disabled = true;
-      if (status instanceof HTMLElement) status.textContent = "Respondiendo...";
-      const typingNode = appendTypingMessage();
+      // Snapshot history BEFORE adding the current user message
+      const historySnapshot = [...history];
 
-      let timeoutId = 0;
+      hideSuggestions();
+      appendUserMessage(message);
+      textarea.value = "";
+      autoResize();
+      updateCounter();
+      sendButton.disabled = true;
+      if (status instanceof HTMLElement) status.textContent = "Respondiendo…";
+
+      const typingNode = appendTypingMessage();
+      let abortController = new AbortController();
+      const timeoutId = window.setTimeout(() => abortController.abort(), 25000);
+
       try {
-        const controller = new AbortController();
-        timeoutId = window.setTimeout(() => controller.abort(), 20000);
         const response = await fetch("/api/chat-humedal", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          signal: controller.signal,
-          body: JSON.stringify({
-            message,
-            history: history.slice(0, -1),
-          }),
+          signal: abortController.signal,
+          body: JSON.stringify({ message, history: historySnapshot }),
         });
         clearTimeout(timeoutId);
 
-        const data = await response.json().catch(() => ({}));
         if (!response.ok) {
+          const data = await response.json().catch(() => ({}));
           throw new Error(data?.error || "No fue posible responder tu consulta.");
         }
 
-        appendMessage(data.answer || "No hubo respuesta.", "assistant");
-        if (status instanceof HTMLElement) status.textContent = "";
+        const contentType = response.headers.get("content-type") || "";
+
+        if (contentType.includes("text/event-stream")) {
+          // ── Streaming path ─────────────────────────────────────────────────
+          typingNode.remove();
+          const { bubble } = createStreamingBubble();
+
+          const reader = response.body?.getReader();
+          if (!reader) throw new Error("No se pudo leer la respuesta.");
+
+          const decoder = new TextDecoder();
+          let buffer = "";
+          let fullText = "";
+
+          try {
+            outer: while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+
+              buffer += decoder.decode(value, { stream: true });
+              const lines = buffer.split("\n");
+              buffer = lines.pop() ?? "";
+
+              for (const line of lines) {
+                if (!line.startsWith("data: ")) continue;
+                const raw = line.slice(6).trim();
+                if (!raw) continue;
+
+                let parsed;
+                try { parsed = JSON.parse(raw); } catch { continue; }
+
+                if (parsed.error) throw new Error(parsed.error);
+
+                if (parsed.delta) {
+                  fullText += parsed.delta;
+                  bubble.innerHTML = renderMarkdown(fullText);
+                  scrollToBottom();
+                }
+
+                if (parsed.truncated) {
+                  fullText += "\n\n*(Respuesta incompleta. Intenta reformular la pregunta.)*";
+                  bubble.innerHTML = renderMarkdown(fullText);
+                }
+
+                if (parsed.done) break outer;
+              }
+            }
+          } finally {
+            reader.releaseLock();
+          }
+
+          addToHistory("assistant", fullText);
+          if (status instanceof HTMLElement) status.textContent = "";
+        } else {
+          // ── JSON path (schedule question fast-path) ────────────────────────
+          const data = await response.json();
+          typingNode.remove();
+          appendAssistantMessage(data.answer || "No hubo respuesta.");
+          if (status instanceof HTMLElement) status.textContent = "";
+        }
       } catch (error) {
+        clearTimeout(timeoutId);
+        typingNode.remove();
         const fallback =
           error instanceof Error && error.name === "AbortError"
-            ? "El asistente demoro demasiado en responder. Intenta nuevamente."
+            ? "El asistente demoró demasiado en responder. Intenta nuevamente."
             : error instanceof Error
               ? error.message
-              : "Ocurrio un error inesperado.";
-        appendMessage(fallback, "assistant");
+              : "Ocurrió un error inesperado.";
+        appendAssistantMessage(fallback);
         if (status instanceof HTMLElement) status.textContent = "Error al consultar.";
       } finally {
-        if (timeoutId) clearTimeout(timeoutId);
-        typingNode?.remove();
+        clearTimeout(timeoutId);
         sendButton.disabled = false;
         if (textarea instanceof HTMLTextAreaElement) textarea.focus();
+        updateScrollButton();
       }
     });
   };

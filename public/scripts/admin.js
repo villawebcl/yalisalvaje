@@ -175,7 +175,7 @@ const uploadImage = async (file, folder) => {
 };
 
 const compressImage = async (file, options = {}) => {
-  const { maxWidth = 1280, quality = 0.68 } = options;
+  const { maxWidth = 1200, quality = 0.80 } = options;
   try {
     const bitmap = await createImageBitmap(file);
     const scale = Math.min(1, maxWidth / bitmap.width);
@@ -186,19 +186,19 @@ const compressImage = async (file, options = {}) => {
     canvas.width = width;
     canvas.height = height;
     const ctx = canvas.getContext("2d");
-    if (!ctx) return file;
+    if (!ctx) { bitmap.close(); return file; }
     ctx.drawImage(bitmap, 0, 0, width, height);
+    bitmap.close();
 
-    const avifBlob = await new Promise((resolve) => canvas.toBlob(resolve, "image/avif", quality));
-    const webpBlob = avifBlob
-      ? null
-      : await new Promise((resolve) => canvas.toBlob(resolve, "image/webp", quality));
-    const blob = avifBlob || webpBlob;
-    if (!blob) return file;
+    // WebP: encodes en milisegundos (AVIF via Canvas es 10-30s, inaceptable para UX)
+    const webpBlob = await new Promise((resolve) => canvas.toBlob(resolve, "image/webp", quality));
+
+    // Solo usar comprimido si realmente es más liviano
+    if (!webpBlob || webpBlob.size >= file.size) return file;
+
     const baseName = file.name.replace(/\.[^.]+$/, "");
-    const extension = blob.type === "image/avif" ? "avif" : "webp";
-    return new File([blob], `${baseName}.${extension}`, { type: blob.type });
-  } catch (error) {
+    return new File([webpBlob], `${baseName}.webp`, { type: "image/webp" });
+  } catch {
     return file;
   }
 };
@@ -853,7 +853,9 @@ blogForm?.addEventListener("submit", async (event) => {
       return;
     }
     try {
-      const optimized = await compressImage(file, { maxWidth: 1280, quality: 0.68 });
+      setMessage(blogMessage, "Comprimiendo imagen…", "loading");
+      const optimized = await compressImage(file, { maxWidth: 1100, quality: 0.80 });
+      setMessage(blogMessage, "Subiendo imagen…", "loading");
       imageUrl = await uploadImage(optimized, BLOG_FOLDER);
       if (existingImage) await removeImageByUrl(existingImage);
     } catch (error) {
@@ -915,7 +917,9 @@ galleryForm?.addEventListener("submit", async (event) => {
       return;
     }
     try {
-      const optimized = await compressImage(file, { maxWidth: 1120, quality: 0.65 });
+      setMessage(galleryMessage, "Comprimiendo imagen…", "loading");
+      const optimized = await compressImage(file, { maxWidth: 1200, quality: 0.80 });
+      setMessage(galleryMessage, "Subiendo imagen…", "loading");
       imageUrl = await uploadImage(optimized, GALLERY_FOLDER);
       if (existingImage) await removeImageByUrl(existingImage);
     } catch (error) {

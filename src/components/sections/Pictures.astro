@@ -1,6 +1,6 @@
 ---
 import { supabase } from "../../lib/supabaseClient";
-import { buildOptimizedImageUrl } from "../../lib/imageUtils";
+import { buildOptimizedImageUrl, buildResponsiveSrcSet } from "../../lib/imageUtils";
 
 const { data: featuredSetting, error: featuredError } = await supabase
   .from("site_settings")
@@ -46,6 +46,8 @@ const fotosDestacadas = fotos ?? [];
           <figure class="featured-card card-hover media-zoom">
             <img
               src={buildOptimizedImageUrl(foto.url_publica, { width: 760, quality: 64 })}
+              srcset={buildResponsiveSrcSet(foto.url_publica, { widths: [320, 520, 760], quality: 64 }) || undefined}
+              sizes="(max-width: 600px) 100vw, (max-width: 1100px) 50vw, 33vw"
               alt={foto.alt_text ?? "Fotografía del humedal"}
               loading="lazy"
               decoding="async"
