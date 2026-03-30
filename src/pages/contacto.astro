@@ -76,7 +76,7 @@ import Footer from "../components/ui/Footer.astro";
       const formData = new FormData(form);
 
       try {
-        const response = await fetch("/", {
+        const response = await fetch("/contacto", {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: new URLSearchParams(formData as any).toString(),
