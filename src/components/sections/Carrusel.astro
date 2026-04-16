@@ -5,22 +5,27 @@ const images = [
   {
     src: "https://wkayvtztiijqpvoxtcxj.supabase.co/storage/v1/object/public/media/site/1769636649979-xolmis-pyrope.webp",
     alt: "Xolmis pyrope",
+    style: "object-position: 43% 57%;"
   },
   {
     src: "https://wkayvtztiijqpvoxtcxj.supabase.co/storage/v1/object/public/media/site/1769636647220-anairetes-parulus.webp",
     alt: "Anairetes parulus",
+    style: "object-position: 28% 72%;"
   },
   {
     src: "https://wkayvtztiijqpvoxtcxj.supabase.co/storage/v1/object/public/media/site/1769636647799-colaptes-pitius.webp",
     alt: "Colaptes pitius",
+    style: "object-position: 46% 54%;"
   },
   {
     src: "https://wkayvtztiijqpvoxtcxj.supabase.co/storage/v1/object/public/media/site/1769636645192-albufera-garza-boyera.webp",
     alt: "Garza Boyera",
+    style: "object-position: 55% 45%;"
   },
   {
     src: "https://wkayvtztiijqpvoxtcxj.supabase.co/storage/v1/object/public/media/site/1769636649262-pelicano.webp",
     alt: "Pelícano",
+    style: "object-position: 45% 55%;"
   },
 ];
 
@@ -53,6 +58,7 @@ const heroImages = images.map((image) => ({
           srcset={image.srcset || undefined}
           sizes="100vw"
           alt={image.alt}
+          style={image.style}
           loading={index === 0 ? "eager" : "lazy"}
           fetchpriority={index === 0 ? "high" : "low"}
           decoding="async"
@@ -110,6 +116,7 @@ const heroImages = images.map((image) => ({
       rgba(12, 18, 14, 0.15)
     );
     z-index: 1;
+    pointer-events: none;
   }
 
   .hero-text {
@@ -175,14 +182,20 @@ const heroImages = images.map((image) => ({
       flex-grow: 1;
       opacity: 0.6;
       transition:
-        flex-grow 0.5s ease,
-        opacity 0.5s ease;
+        flex-grow 0.8s cubic-bezier(0.25, 1, 0.5, 1),
+        opacity 0.8s ease,
+        filter 0.8s ease;
+    }
+
+    /* Corrige el tono/opacity de la primera imagen en desktop */
+    .carousel img:first-child {
+      opacity: 0.6;
     }
 
     .carousel img:hover {
-      flex-grow: 3;
+      flex-grow: 2.5;
       opacity: 1;
-      filter: contrast(120%);
+      filter: brightness(1.05) contrast(105%);
     }
   }
 </style>
