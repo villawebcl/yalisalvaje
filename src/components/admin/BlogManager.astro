@@ -17,7 +17,12 @@
 <div class="modal" id="blog-modal" aria-hidden="true">
     <div class="modal-panel">
         <button class="modal-close" type="button" aria-label="Cerrar">×</button>
-        <h3 id="blog-modal-title">Nueva entrada</h3>
+        <div class="modal-header-actions">
+            <h3 id="blog-modal-title">Nueva entrada</h3>
+            <button type="button" class="secondary magic-btn" id="blog-autocomplete">
+                Autocompletar IA ✨
+            </button>
+        </div>
         <form class="form" id="blog-form" autocomplete="off">
             <input type="hidden" name="post_id" />
             <label>
@@ -111,6 +116,31 @@
 
 <style>
     /* Scoped styles moved from admin.astro global styles where specific */
+    .modal-header-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.2rem;
+    }
+
+    .magic-btn {
+        background: linear-gradient(135deg, rgba(82, 172, 114, 0.1), rgba(122, 219, 155, 0.2));
+        color: #2b6144;
+        border-color: rgba(43, 97, 68, 0.25);
+        transition: all 0.2s;
+    }
+
+    .magic-btn:hover:not(:disabled) {
+        background: linear-gradient(135deg, rgba(82, 172, 114, 0.2), rgba(122, 219, 155, 0.4));
+        border-color: rgba(43, 97, 68, 0.4);
+        transform: translateY(-1px);
+    }
+
+    .magic-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
     .panel-header {
         display: flex;
         justify-content: space-between;

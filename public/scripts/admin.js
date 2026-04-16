@@ -40,6 +40,7 @@ const blogPreviewCategory = document.getElementById("blog-preview-category");
 const blogContentInput = blogForm?.querySelector("[name='contenido']");
 const blogContentPreview = document.getElementById("blog-content-preview");
 const blogMarkdownButtons = document.querySelectorAll(".md-btn[data-md-action]");
+const blogAutocompleteBtn = document.getElementById("blog-autocomplete");
 
 const galleryForm = document.getElementById("gallery-form");
 const galleryIdInput = galleryForm?.querySelector("[name='image_id']");
@@ -59,6 +60,7 @@ const galleryFeaturedOnly = document.getElementById("gallery-featured-only");
 const galleryFeaturedLimit = document.getElementById("gallery-featured-limit");
 const galleryFeaturedSave = document.getElementById("gallery-featured-save");
 const gallerySettingsMessage = document.getElementById("gallery-settings-message");
+const galleryAutocompleteBtn = document.getElementById("gallery-autocomplete");
 
 const SETTINGS_TABLE = "site_settings";
 const FEATURED_LIMIT_KEY = "featured_gallery_limit";
@@ -527,6 +529,95 @@ const handleMarkdownAction = (action) => {
     resizeTextarea(blogContentInput);
   }
 };
+
+const handleAutocomplete = async (type) => {
+  const btn = type === "blog" ? blogAutocompleteBtn : galleryAutocompleteBtn;
+  if (!btn) return;
+
+  let context = {};
+  if (type === "blog") {
+    context = {
+      titulo: blogForm?.querySelector("[name='titulo']")?.value,
+      categoria: blogForm?.querySelector("[name='categoria']")?.value,
+      extracto: blogForm?.querySelector("[name='extracto']")?.value,
+      contenido: blogContentInput?.value,
+    };
+    if (!context.titulo) return showToast("Por favor escribe al menos un título para usar la IA", "error");
+  } else {
+    context = {
+      titulo: galleryForm?.querySelector("[name='titulo']")?.value,
+      detalle: galleryForm?.querySelector("[name='detalle']")?.value,
+      alt: galleryForm?.querySelector("[name='alt']")?.value,
+    };
+    if (!context.titulo) return showToast("Por favor escribe un título/descripción para usar la IA", "error");
+  }
+
+  const originalText = btn.innerHTML;
+  btn.innerHTML = "Generando... ⏳";
+  btn.disabled = true;
+  showToast("Pensando... obteniendo sugerencias de IA", "info");
+
+  try {
+    const response = await fetch("/api/admin-autocomplete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type, context }),
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || "Fallo en la API");
+    }
+    const data = await response.json();
+    console.log("Respuesta IA:", data);
+
+    // Normalizar llaves por si el modelo las capitalizó
+    const normalized = {};
+    for (const key in data) {
+      if (typeof data[key] === "string") {
+        normalized[key.toLowerCase()] = data[key];
+      }
+    }
+
+    if (type === "blog") {
+      const catEl = blogForm?.querySelector("[name='categoria']");
+      const excEl = blogForm?.querySelector("[name='extracto']");
+      
+      if (catEl && normalized.categoria) {
+        catEl.value = normalized.categoria;
+        catEl.dispatchEvent(new Event("input"));
+      }
+      if (excEl && normalized.extracto) {
+        excEl.value = normalized.extracto;
+        excEl.dispatchEvent(new Event("input"));
+      }
+      if (blogContentInput && normalized.contenido) {
+        blogContentInput.value = normalized.contenido;
+        blogContentInput.dispatchEvent(new Event("input"));
+      }
+    } else {
+      const detEl = galleryForm?.querySelector("[name='detalle']");
+      const altEl = galleryForm?.querySelector("[name='alt']");
+      
+      if (detEl && normalized.detalle) {
+        detEl.value = normalized.detalle;
+        detEl.dispatchEvent(new Event("input"));
+      }
+      if (altEl && normalized.alt) {
+        altEl.value = normalized.alt;
+        altEl.dispatchEvent(new Event("input"));
+      }
+    }
+    showToast("¡Campos autocompletados con IA!", "success");
+  } catch (err) {
+    showToast(`Error de IA: ${err.message}`, "error");
+  } finally {
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+  }
+};
+
+blogAutocompleteBtn?.addEventListener("click", () => handleAutocomplete("blog"));
+galleryAutocompleteBtn?.addEventListener("click", () => handleAutocomplete("gallery"));
 
 const loadFeaturedLimit = async () => {
   if (!(galleryFeaturedLimit instanceof HTMLInputElement)) return;
