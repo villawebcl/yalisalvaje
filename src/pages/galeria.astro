@@ -200,6 +200,11 @@ const imagenesPayload = JSON.stringify(
         img.getAttribute("alt") ||
         "";
       const detail = img.getAttribute("data-detail") || "";
+      
+      lightboxImage.style.transition = "none";
+      lightboxImage.style.transform = "translateX(0)";
+      lightboxImage.style.opacity = "1";
+
       lightboxImage.setAttribute("src", src);
       lightboxImage.setAttribute("alt", img.alt || "");
       if (lightboxCaption) {
@@ -260,21 +265,65 @@ const imagenesPayload = JSON.stringify(
       showAtIndex(currentIndex + 1);
     });
 
+    let isLightboxDragging = false;
+
     lightboxImage?.addEventListener("touchstart", (event) => {
       const touch = event.touches[0];
       if (!touch) return;
       touchStartX = touch.clientX;
       touchStartY = touch.clientY;
-    });
+      isLightboxDragging = true;
+      lightboxImage.style.transition = "none";
+    }, { passive: true });
+
+    lightboxImage?.addEventListener("touchmove", (event) => {
+      if (!isLightboxDragging) return;
+      const touch = event.touches[0];
+      if (!touch) return;
+      const diffX = touch.clientX - touchStartX;
+      const diffY = touch.clientY - touchStartY;
+      
+      // Permitir arrastrar la imagen horizontalmente
+      if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 10) {
+        event.preventDefault();
+        lightboxImage.style.transform = `translateX(${diffX}px)`;
+      }
+    }, { passive: false });
 
     lightboxImage?.addEventListener("touchend", (event) => {
+      if (!isLightboxDragging) return;
+      isLightboxDragging = false;
       const touch = event.changedTouches[0];
       if (!touch) return;
       const diffX = touch.clientX - touchStartX;
       const diffY = touch.clientY - touchStartY;
-      if (Math.abs(diffX) < 40 || Math.abs(diffY) > 80) return;
-      if (diffX > 0) showAtIndex(currentIndex - 1);
-      else showAtIndex(currentIndex + 1);
+      
+      lightboxImage.style.transition = "transform 0.3s ease, opacity 0.3s ease";
+      
+      if (Math.abs(diffX) > 50 && Math.abs(diffX) > Math.abs(diffY)) {
+        // Ocultar y deslizar hacia la dirección
+        lightboxImage.style.opacity = "0";
+        lightboxImage.style.transform = `translateX(${diffX > 0 ? 100 : -100}px)`;
+        
+        setTimeout(() => {
+          if (diffX > 0) showAtIndex(currentIndex - 1);
+          else showAtIndex(currentIndex + 1);
+          
+          // Preparar la imagen para que entre desde el otro lado
+          lightboxImage.style.transition = "none";
+          lightboxImage.style.transform = `translateX(${diffX > 0 ? -50 : 50}px)`;
+          
+          setTimeout(() => {
+            lightboxImage.style.transition = "transform 0.3s ease, opacity 0.3s ease";
+            lightboxImage.style.transform = "translateX(0)";
+            lightboxImage.style.opacity = "1";
+          }, 50);
+        }, 200);
+      } else {
+        // Volver a la posición original
+        lightboxImage.style.transform = "translateX(0)";
+        lightboxImage.style.opacity = "1";
+      }
     });
 
     const handleKeydown = (event) => {
