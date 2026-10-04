@@ -37,6 +37,15 @@ Variables necesarias:
 
 Si cambias variables de entorno en local, reinicia `npm run dev`.
 
+## Mantención de Supabase Free
+
+Netlify ejecuta `netlify/functions/supabase-keepalive.mjs` los lunes y jueves a
+las 12:17 UTC. La función realiza una lectura mínima de `blog_posts` para
+mantener actividad real en la base de datos. Reutiliza `PUBLIC_SUPABASE_URL` y
+`PUBLIC_SUPABASE_ANON_KEY`; ambas deben estar configuradas en el entorno de
+producción de Netlify. Después de publicar, confirma que la función aparezca con
+la etiqueta **Scheduled** y ejecuta **Run now** una vez para validar la conexión.
+
 ---
 
 ## 🛠️ Instalación local
@@ -45,4 +54,10 @@ Si cambias variables de entorno en local, reinicia `npm run dev`.
 git clone https://github.com/tu-usuario/yali-salvaje.git
 cd yali-salvaje
 npm install
+cp .env.example .env
 npm run dev
+```
+
+Completa `PUBLIC_SUPABASE_URL` y `PUBLIC_SUPABASE_ANON_KEY` en `.env` con los
+valores configurados en Netlify antes de iniciar el servidor. Sin ellos no se
+pueden cargar las fotografías, entradas ni ajustes guardados en Supabase.

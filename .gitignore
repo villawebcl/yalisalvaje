@@ -27,3 +27,6 @@ pnpm-debug.log*
 
 # local optimized images
 /tmp/
+
+# local design review artifacts
+.impeccable/
