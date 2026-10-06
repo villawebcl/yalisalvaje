@@ -27,7 +27,7 @@
   --radius-pill: 0.32rem;
   --radius-round: 50%;
   --radius: var(--radius-lg);
-  --radius-card: 0.18rem;
+  --radius-card: 0.55rem;
   --content: 1200px; /* Slightly wider content area */
   
   --font-display: 'Alegreya', serif;

@@ -1,0 +1,117 @@
+---
+export const prerender = true;
+import Layout from "../layouts/Layout.astro";
+import Header from "../components/ui/Header.astro";
+import Footer from "../components/ui/Footer.astro";
+---
+
+<Layout title="Política de Privacidad | Yali Salvaje">
+  <Header />
+  <section class="page">
+    <div class="container text-content">
+      <p class="kicker">Ley Nº 19.628</p>
+      <h1>Política de Privacidad</h1>
+      <p class="lead">
+        En Yali Salvaje respetamos tu privacidad y protegemos tus datos personales conforme a la legislación vigente en Chile.
+      </p>
+
+      <h2>1. Responsable del Tratamiento</h2>
+      <p>
+        El responsable del tratamiento de los datos recogidos en este sitio web es el equipo de administración de Yali Salvaje, dedicado a la conservación y educación ambiental en el Humedal El Yali, Región de Valparaíso, Chile.
+      </p>
+
+      <h2>2. Recopilación de Datos y Finalidad</h2>
+      <p>
+        A través de la sección de <strong>Contacto</strong>, solicitamos únicamente tu nombre y correo electrónico. Estos datos tienen como <strong>única finalidad</strong> poder responder a tus consultas, mensajes o sugerencias sobre el humedal y nuestras actividades. 
+      </p>
+      <p>
+        Tus datos no serán añadidos a listas de correo no deseado (spam) ni serán cedidos, vendidos o transferidos a terceros bajo ninguna circunstancia, salvo obligación legal.
+      </p>
+
+      <h2>3. Consentimiento</h2>
+      <p>
+        Al enviarnos un mensaje a través del formulario de contacto y marcar la casilla de aceptación correspondiente, estás otorgando tu consentimiento expreso, libre e informado para que procesemos tus datos personales para el fin arriba mencionado, tal como lo exige la Ley Nº 19.628 sobre Protección de la Vida Privada.
+      </p>
+
+      <h2>4. Derechos ARCO</h2>
+      <p>
+        En cumplimiento de la normativa chilena, te garantizamos en todo momento el ejercicio de tus derechos de:
+      </p>
+      <ul>
+        <li><strong>Acceso:</strong> Solicitar información sobre qué datos tuyos tenemos almacenados.</li>
+        <li><strong>Rectificación:</strong> Solicitar la corrección de tus datos si son erróneos o están desactualizados.</li>
+        <li><strong>Cancelación:</strong> Solicitar la eliminación de tus datos de nuestros registros cuando ya no sean necesarios para el fin que fueron recabados.</li>
+        <li><strong>Oposición:</strong> Oponerte al tratamiento de tus datos para fines específicos.</li>
+      </ul>
+      <p>
+        Para ejercer cualquiera de estos derechos, puedes escribirnos utilizando nuestro mismo formulario de contacto o comunicarte directamente con nosotros.
+      </p>
+
+      <h2>5. Uso de Cookies</h2>
+      <p>
+        Yali Salvaje está comprometido con una navegación limpia y libre de seguimientos invasivos. <strong>No utilizamos cookies de rastreo</strong> ni servicios de analítica de terceros que perfilen tu comportamiento en la web. La única cookie empleada es de carácter estrictamente técnico y está reservada para el funcionamiento del panel de administración interno.
+      </p>
+
+      <h2>6. Seguridad de los Datos</h2>
+      <p>
+        Toda comunicación entre tu navegador y nuestro sitio web está cifrada (mediante protocolo HTTPS), y adoptamos las medidas técnicas necesarias para evitar la alteración, pérdida o acceso no autorizado a la información que nos envías.
+      </p>
+    </div>
+  </section>
+  <Footer />
+</Layout>
+
+<style>
+  .page {
+    padding: 7rem 0 6rem;
+  }
+
+  .text-content {
+    max-width: 800px;
+    margin: 0 auto;
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: var(--text);
+  }
+
+  h1 {
+    font-family: "Alegreya", serif;
+    font-size: clamp(2.2rem, 3.5vw, 3.5rem);
+    margin: 0 0 1rem;
+    color: var(--bg-ink);
+  }
+
+  h2 {
+    font-family: "Alegreya", serif;
+    font-size: 1.7rem;
+    margin: 2.5rem 0 1rem;
+    color: var(--accent-2);
+  }
+
+  .kicker {
+    text-transform: uppercase;
+    letter-spacing: 0.25rem;
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin: 0 0 0.5rem;
+  }
+
+  .lead {
+    font-size: 1.2rem;
+    color: var(--muted);
+    margin-bottom: 2.5rem;
+  }
+
+  p {
+    margin-bottom: 1.2rem;
+  }
+
+  ul {
+    margin-bottom: 1.5rem;
+    padding-left: 1.5rem;
+  }
+
+  li {
+    margin-bottom: 0.5rem;
+  }
+</style>

@@ -50,6 +50,10 @@ import Footer from "../components/ui/Footer.astro";
             placeholder="Escribe tu consulta"
             required></textarea>
         </label>
+        <label class="checkbox-label">
+          <input type="checkbox" name="privacidad" required />
+          <span>He leído y acepto la <a href="/privacidad" target="_blank" rel="noopener noreferrer">Política de Privacidad</a>.</span>
+        </label>
         <button type="submit" id="submit-btn">Enviar consulta</button>
         <p class="note" id="form-message"></p>
       </form>
@@ -169,6 +173,27 @@ import Footer from "../components/ui/Footer.astro";
     font-family: inherit;
     font-size: 1rem;
     width: 100%;
+  }
+
+  .checkbox-label {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 0.75rem;
+    font-weight: 400;
+    font-size: 0.9rem;
+    color: var(--muted);
+    margin-top: 0.25rem;
+  }
+
+  .checkbox-label input {
+    width: auto;
+    margin-top: 0.2rem;
+  }
+
+  .checkbox-label a {
+    color: var(--accent);
+    text-decoration: underline;
   }
 
   button {
